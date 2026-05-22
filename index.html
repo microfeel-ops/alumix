@@ -537,8 +537,8 @@ function openLightbox(){ if(!photos.length) return; var cap=(curP?curP.name:'')+
 function openDetailLb(){ var img=document.getElementById('detailImg'); if(img.style.display!=='none') showLb(img.src,'상세도'); }
 function showLb(src,cap){ document.getElementById('lbImg').src=src; document.getElementById('lbCap').textContent=cap||''; document.getElementById('lightbox').style.display='flex'; }
 function closeLightbox(){ document.getElementById('lightbox').style.display='none'; }
-function lbPrev(){ if(photos.length>1){ photoIdx=(photoIdx-1+photos.length)%photos.length; document.getElementById('lbImg').src=photos[photoIdx]; } }
-function lbNext(){ if(photos.length>1){ photoIdx=(photoIdx+1)%photos.length; document.getElementById('lbImg').src=photos[photoIdx]; } }
+function lbPrev(){ if(photos.length>1){ photoIdx=(photoIdx-1+photos.length)%photos.length; document.getElementById('lbImg').src=photos[photoIdx]; document.getElementById('lbCap').textContent=(curP?curP.name:'')+(photos.length>1?' ('+(photoIdx+1)+'/'+photos.length+')':''); } }
+function lbNext(){ if(photos.length>1){ photoIdx=(photoIdx+1)%photos.length; document.getElementById('lbImg').src=photos[photoIdx]; document.getElementById('lbCap').textContent=(curP?curP.name:'')+(photos.length>1?' ('+(photoIdx+1)+'/'+photos.length+')':''); } }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowLeft') lbPrev(); if(e.key==='ArrowRight') lbNext(); });
 
 // ── 폰 뒤로가기 가로채기 ─────────────────────────
