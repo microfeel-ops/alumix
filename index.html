@@ -18,6 +18,17 @@
 ::-webkit-scrollbar { width:5px; }
 ::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:9999px; }
 .tab-active { background:white; color:#0b192c; font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+/* 모바일 상세 패널 슬라이드 */
+@media (max-width: 767px) {
+  #vDetail {
+    position: fixed !important;
+    inset: 0;
+    z-index: 30;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  #vDetail.slide-in { transform: translateX(0) !important; }
+}
 </style>
 <script src="data.js" onerror="console.warn('data.js 없음 - setup.py를 실행하세요')"></script>
 </head>
@@ -95,7 +106,9 @@
 
     <div id="detContent" class="w-full h-full flex flex-col" style="opacity:0;transition:opacity .3s">
       <div class="h-16 px-4 border-b border-slate-100 flex items-center gap-3 flex-shrink-0">
-        <button onclick="closeMobile()" class="md:hidden p-2 rounded-lg hover:bg-slate-100">←</button>
+        <button onclick="closeMobile()" class="md:hidden flex items-center gap-1 pl-1 pr-3 py-2 rounded-xl hover:bg-slate-100 text-slate-600 font-bold text-sm flex-shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>목록
+        </button>
         <div class="overflow-hidden flex-1">
           <h2 id="detName" class="text-sm md:text-base font-bold text-slate-900 truncate"></h2>
           <p id="detSub" class="text-xs text-slate-400 truncate"></p>
@@ -104,7 +117,7 @@
 
       <div class="flex-1 overflow-y-auto">
         <!-- 메인 사진 슬라이더 -->
-        <div class="relative bg-slate-950 w-full overflow-hidden group" style="aspect-ratio:16/9">
+        <div id="heroSlider" class="relative bg-slate-950 w-full overflow-hidden group" style="aspect-ratio:16/9">
           <img id="heroImg" alt="" class="w-full h-full object-cover cursor-zoom-in transition-transform duration-300" style="display:none" onclick="openLightbox()">
           <div id="heroPH" class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 bg-slate-900">
             <div class="text-5xl mb-3 opacity-30">🖼</div>
@@ -416,9 +429,19 @@ function renderList(){
 // ── 프로젝트 선택 ────────────────────────────────
 function selectProject(p){
   curP=p;
-  document.getElementById('vDetail').classList.remove('hidden');
-  document.getElementById('vDetail').classList.add('flex');
-  if(window.innerWidth<768) document.getElementById('vList').classList.add('hidden');
+  var vd=document.getElementById('vDetail');
+  var isMobile=window.innerWidth<768;
+  if(isMobile){
+    history.pushState({detail:true},'');
+    vd.classList.remove('hidden');
+    vd.classList.add('flex');
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ vd.classList.add('slide-in'); });
+    });
+  } else {
+    vd.classList.remove('hidden');
+    vd.classList.add('flex');
+  }
   document.getElementById('detPlaceholder').style.display='none';
   document.getElementById('detContent').style.opacity='1';
 
@@ -500,8 +523,13 @@ function moveProj(d){
   if(idx+d>=0&&idx+d<filtered.length) selectProject(filtered[idx+d]);
 }
 function closeMobile(){
-  document.getElementById('vList').classList.remove('hidden');
-  document.getElementById('vDetail').classList.add('hidden');
+  var vd=document.getElementById('vDetail');
+  vd.classList.remove('slide-in');
+  setTimeout(function(){
+    vd.classList.add('hidden');
+    vd.classList.remove('flex');
+    document.getElementById('vList').classList.remove('hidden');
+  },300);
 }
 
 // ── 라이트박스 ───────────────────────────────────
@@ -512,6 +540,34 @@ function closeLightbox(){ document.getElementById('lightbox').style.display='non
 function lbPrev(){ if(photos.length>1){ photoIdx=(photoIdx-1+photos.length)%photos.length; document.getElementById('lbImg').src=photos[photoIdx]; } }
 function lbNext(){ if(photos.length>1){ photoIdx=(photoIdx+1)%photos.length; document.getElementById('lbImg').src=photos[photoIdx]; } }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowLeft') lbPrev(); if(e.key==='ArrowRight') lbNext(); });
+
+// ── 폰 뒤로가기 가로채기 ─────────────────────────
+window.addEventListener('popstate',function(){
+  if(window.innerWidth<768&&curP) closeMobile();
+});
+
+// ── 터치 스와이프 ─────────────────────────────────
+(function(){
+  var tx=0,ty=0;
+  // 사진 슬라이더
+  function initSlider(){
+    var el=document.getElementById('heroSlider');
+    if(!el)return;
+    el.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+    el.addEventListener('touchend',function(e){
+      var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){ dx>0?prevPhoto():nextPhoto(); }
+    },{passive:true});
+  }
+  // 라이트박스
+  var lb=document.getElementById('lightbox');
+  lb.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+  lb.addEventListener('touchend',function(e){
+    var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>40){ dx>0?lbPrev():lbNext(); }
+  },{passive:true});
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',initSlider):initSlider();
+})();
 
 // ── 인쇄 ────────────────────────────────────────
 // ── 인쇄(Print) 레이아웃 커스터마이징 (A4 한 장 고정형) ────────────────────────
