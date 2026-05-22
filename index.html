@@ -514,16 +514,164 @@ function lbNext(){ if(photos.length>1){ photoIdx=(photoIdx+1)%photos.length; doc
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowLeft') lbPrev(); if(e.key==='ArrowRight') lbNext(); });
 
 // ── 인쇄 ────────────────────────────────────────
+// ── 인쇄(Print) 레이아웃 커스터마이징 (A4 한 장 고정형) ────────────────────────
 function doPrint(){
   if(!filtered.length) return;
-  var w=window.open('','_blank');
-  var catTxt=curCat==='ALL'?'전체':curCat==='E'?'익스테리어':'인테리어';
-  var rows=filtered.map(function(p,i){
-    return '<tr><td>'+(i+1)+'</td><td>'+p.year+'</td><td class="l b">'+p.name+'</td><td>'+p.region+'</td><td>'+(p.cat==='E'?'외장':'내장')+'</td><td>'+p.product+'</td><td class="l">'+(p.colorClean||p.color.split('(')[0].trim())+'</td><td>'+p.thick+'</td></tr>';
-  }).join('');
-  w.document.write('<html><head><title>ALUMIX 시공실적</title><style>body{font-family:sans-serif;padding:20px}h2{color:#1e3e62;border-bottom:2px solid #1e3e62;padding-bottom:8px}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:11px}th{background:#f0f4ff;padding:8px;border:1px solid #ddd}td{padding:7px 8px;border:1px solid #ddd;text-align:center}.l{text-align:left}.b{font-weight:bold}</style></head><body><h2>ALUMIX 시공실적 — '+catTxt+' '+filtered.length+'건 &nbsp;<small style="color:#999;font-weight:normal">'+new Date().toLocaleDateString("ko-KR")+'</small></h2><table><thead><tr><th>No</th><th>연도</th><th>현장명</th><th>지역</th><th>구분</th><th>제품</th><th>색상</th><th>두께</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>');
+  
+  var printMode = null;
+  if (curP) {
+    var choice = confirm(
+      "【 인쇄 모드 선택 】\n\n" +
+      "▶ [확인 (OK)] : 현재 선택된 '" + curP.name + "' 현장 상세 리포트 (브로셔 형태)\n" +
+      "▶ [취소 (Cancel)] : 현재 검색/필터링된 리스트 전체 출력 (테이블 형태)"
+    );
+    printMode = choice ? 'brochure' : 'table';
+  } else {
+    printMode = 'table';
+  }
+
+  var w = window.open('','_blank');
+  
+  // 공통 초기화 스타일 (여백 제로 및 웹킷 보정)
+  var commonStyle = 
+    "<style>" +
+    "  @page { size: A4 portrait; margin: 0; }" + // 마진을 제거하여 브라우저 강제 여백 최소화
+    "  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }" +
+    "  body { font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; color: #1e293b; margin: 0; padding: 0; background: #fff; }" +
+    "  .print-btn { position: fixed; top: 20px; right: 20px; background: #1e3e62; color: white; border: none; padding: 8px 16px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; z-index: 9999; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }" +
+    "  @media print { .print-btn { display: none; } }" +
+    "</style>";
+
+  // ── [모드 1] 요약 리스트 형태 (기존 유지) ──
+  if (printMode === 'table') {
+    var catTxt = curCat === 'ALL' ? '전체' : curCat === 'E' ? '익스테리어' : '인테리어';
+    var rows = filtered.map(function(p, i){
+      return '<tr>' +
+        '<td>'+(i+1)+'</td>' +
+        '<td>'+p.year+'</td>' +
+        '<td class="l b">'+p.name+'</td>' +
+        '<td>'+p.region+'</td>' +
+        '<td>'+(p.cat==='E'?'외장':'내장')+'</td>' +
+        '<td>'+p.product+'</td>' +
+        '<td class="l">'+(p.colorClean||p.color.split('(')[0].trim())+'</td>' +
+        '<td>'+p.thick+'</td>' +
+        '</tr>';
+    }).join('');
+
+    w.document.write(
+      '<html><head><title>ALUMIX 시공실적 목록</title>' + commonStyle +
+      '<style>' +
+      '  body { padding: 15mm 12mm; }' +
+      '  h2 { color: #0b192c; font-size: 20px; border-bottom: 3px solid #1e3e62; padding-bottom: 10px; margin: 0 0 15px 0; display: flex; justify-content: space-between; align-items: flex-end; }' +
+      '  table { width: 100%; border-collapse: collapse; font-size: 11px; line-height: 1.4; }' +
+      '  th { background: #f0f4ff; color: #0b192c; padding: 9px; border: 1px solid #cbd5e1; font-weight: bold; }' +
+      '  td { padding: 8px; border: 1px solid #e2e8f0; text-align: center; }' +
+      '  .l { text-align: left; } .b { font-weight: bold; color: #0b192c; }' +
+      '</style></head><body>' +
+      '<button class="print-btn" onclick="window.print()">즉시 인쇄</button>' +
+      '<h2>' +
+      '  <span>ALUMIX 시공실적 포트폴리오 <small style="font-size:13px; color:#64748b; font-weight:normal;">['+catTxt+' 총 '+filtered.length+'건]</small></span>' +
+      '  <span style="font-size:12px; color:#94a3b8; font-weight:normal;">'+new Date().toLocaleDateString("ko-KR")+'</span>' +
+      '</h2>' +
+      '<table><thead><tr><th>No</th><th>연도</th><th>현장명</th><th>지역</th><th>구분</th><th>제품</th><th>색상</th><th>두께</th></tr></thead>' +
+      '<tbody>'+rows+'</tbody></table></body></html>'
+    );
+  } 
+  
+  // ── [모드 2] 제안서 첨부용 상세 현장 리포트 (A4 한 장 완벽 고정형) ──
+  else if (printMode === 'brochure') {
+    var heroSrc = photos.length ? photos[photoIdx] : '';
+    // 찌부 방지 핵심: object-fit: cover 및 center 배치
+    var heroHTML = heroSrc 
+      ? '<img src="'+heroSrc+'" style="width:100%; height:100%; object-fit: cover; object-position: center; display: block;">'
+      : '<div style="width:100%; height:100%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:12px;">🖼 사진 없음</div>';
+
+    var dImgEl = document.getElementById('detailImg');
+    // 도면 찌부 방지: max가 아닌 height:100% 와 object-fit: contain 처리
+    var detailHTML = (dImgEl && dImgEl.style.display !== 'none')
+      ? '<img src="'+dImgEl.src+'" style="width:100%; height:100%; object-fit: contain; display: block;">'
+      : '<div style="color:#94a3b8; font-size:12px; text-align:center; padding-top: 60px;">📐 도면 데이터 없음</div>';
+
+    var catTxt = curP.cat === 'E' ? 'EXTERIOR PORTFOLIO' : 'INTERIOR PORTFOLIO';
+
+    w.document.write(
+      '<html><head><title>ALUMIX 리포트_' + curP.name + '</title>' + commonStyle +
+      '<style>' +
+      '  /* A4 절대 규격화 설정 (210mm x 297mm) */' +
+      '  .a4-page { width: 210mm; height: 297mm; padding: 20mm 15mm; position: relative; overflow: hidden; display: flex; flex-direction: column; background: #fff; }' +
+      '  ' +
+      '  /* 헤더 섹션 고정 */' +
+      '  .header { border-bottom: 2px solid #0b192c; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; flex-shrink: 0; }' +
+      '  .brand-title { font-size: 11px; font-weight: 800; color: #1e3e62; line-height: 1.2; letter-spacing: 0.05em; }' +
+      '  .category-tag { font-size: 10px; font-weight: bold; padding: 2px 6px; background: #f0f4ff; color: #1e3e62; border-radius: 4px; }' +
+      '  .project-title { font-size: 24px; font-weight: 800; color: #0b192c; margin: 6px 0 4px 0; letter-spacing: -0.5px; }' +
+      '  .project-address { font-size: 12px; color: #64748b; margin: 0; }' +
+      '  ' +
+      '  /* 메인 그리드 영역 (상단부 높이 고정) */' +
+      '  .grid-container { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 20px; margin-bottom: 25px; flex-shrink: 0; }' +
+      '  .main-photo-box { height: 320px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; }' +
+      '  ' +
+      '  /* 스펙 테이블 균등 분할 */' +
+      '  .spec-table { width: 100%; height: 320px; border-collapse: collapse; table-layout: fixed; }' +
+      '  .spec-table th, .spec-table td { border: 1px solid #e2e8f0; padding: 0 12px; font-size: 11.5px; text-align: left; vertical-align: middle; }' +
+      '  .spec-table th { background: #f8fafc; color: #475569; font-weight: 600; width: 35%; }' +
+      '  .spec-table td { color: #0b192c; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }' +
+      '  ' +
+      '  .section-title { font-size: 12px; font-weight: 800; color: #475569; margin: 0 0 8px 0; border-left: 3px solid #1e3e62; padding-left: 6px; flex-shrink: 0; }' +
+      '  ' +
+      '  /* 하단 그리드 영역 (높이 자동 밸런스 설정) */' +
+      '  .bottom-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-grow: 1; min-height: 0; margin-bottom: 15px; }' +
+      '  .bottom-column { display: flex; flex-direction: column; height: 100%; min-height: 0; }' +
+      '  ' +
+      '  /* 도면 및 코멘트 박스 높이 완벽 동기화 */' +
+      '  .detail-box { border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; flex-grow: 1; overflow: hidden; padding: 10px; display: flex; align-items: center; justify-content: center; }' +
+      '  .comment-box { border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; padding: 14px; flex-grow: 1; font-size: 12px; color: #334155; line-height: 1.6; word-break: break-all; overflow-y: auto; }' +
+      '  ' +
+      '  /* 푸터 영역 맨 밑 고정 */' +
+      '  .footer { border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; flex-shrink: 0; margin-top: auto; }' +
+      '</style></head><body>' +
+      '<button class="print-btn" onclick="window.print()">즉시 인쇄</button>' +
+      
+      // A4 가상 컨테이너로 감싸 규격 통제
+      '<div class="a4-page">' +
+      
+      '  <div class="header">' +
+      '    <div><span class="category-tag">' + catTxt + '</span><h1 class="project-title">' + curP.name + '</h1><p class="project-address">📍 ' + curP.address + '</p></div>' +
+      '    <div style="text-align:right;"><span class="brand-title">PREMIUM ANODIZED PANEL<br><span style="font-size:16px; font-weight:900; color:#0b192c; letter-spacing:0.5px;">ALUMIX</span></span></div>' +
+      '  </div>' +
+      
+      '  <div class="grid-container">' +
+      '    <div><h3 class="section-title">현장 시공 전경</h3><div class="main-photo-box">' + heroHTML + '</div></div>' +
+      '    <div><h3 class="section-title">자재 및 기술 사양</h3>' +
+      '      <table class="spec-table">' +
+      '        <tr><th>시공 연도</th><td>' + curP.year + '년</td></tr>' +
+      '        <tr><th>적용 제품</th><td>' + curP.product + '</td></tr>' +
+      '        <tr><th>색상 명칭</th><td>' + (curP.colorClean || curP.color.split('(')[0].trim()) + '</td></tr>' +
+      '        <tr><th>판넬 두께</th><td>' + curP.thick + '</td></tr>' +
+      '        <tr><th>설계 줄눈</th><td>' + (curP.gap || '-') + ' mm</td></tr>' +
+      '        <tr><th>시공 공법</th><td>' + curP.d1 + ' / ' + curP.d2 + '</td></tr>' +
+      '      </table>' +
+      '    </div>' +
+      '  </div>' +
+      
+      '  <div class="bottom-container">' +
+      '    <div class="bottom-column"><h3 class="section-title">설치 디테일 (System Detail)</h3><div class="detail-box">' + detailHTML + '</div></div>' +
+      '    <div class="bottom-column"><h3 class="section-title">특이사항 및 아키텍처 코멘트</h3><div class="comment-box">' + (curP.comment || '해당 현장에 대한 상세 기술 코멘트가 등록되어 있지 않습니다.') + '</div></div>' +
+      '  </div>' +
+      
+      '  <div class="footer">' +
+      '    <span>N-SPACE Architectural Portfolio</span>' +
+      '    <span>Web. http://nspace.kr  |  Tel. 02-575-2113</span>' +
+      '  </div>' +
+      
+      '</div>' + // .a4-page 종료
+      
+      '</body></html>'
+    );
+  }
+
   w.document.close();
-  setTimeout(function(){ w.print(); },400);
+  setTimeout(function(){ w.print(); }, 400);
 }
 </script>
 </body>
