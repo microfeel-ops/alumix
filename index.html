@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ALUMIX 시공실적 포트폴리오</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: { colors: {
+      brand: { 50:'#f0f4ff', 800:'#1e3e62', 900:'#0b192c' }
+    }}}
+  }
+</script>
+<style>
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:9999px; }
+.tab-active { background:white; color:#0b192c; font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.1); }
+</style>
+<script src="data.js" onerror="console.warn('data.js 없음 - setup.py를 실행하세요')"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex items-center justify-center antialiased">
+
+<div id="app" class="w-full h-screen md:h-[92vh] md:max-w-6xl md:rounded-2xl md:shadow-2xl md:border md:border-slate-200/80 bg-white flex flex-col md:flex-row overflow-hidden">
+
+  <!-- 좌측 목록 패널 -->
+  <div id="vList" class="w-full md:w-[400px] h-full flex flex-col border-r border-slate-100 bg-white flex-shrink-0">
+
+    <header class="h-16 px-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+      <div class="flex items-center">
+        <img src="alumix_logo.png" alt="ALUMIX" style="height:36px;width:auto;mix-blend-mode:multiply;display:block;">
+      </div>
+      <div class="flex bg-slate-100 p-1 rounded-lg gap-1">
+        <button onclick="setCategory('ALL')" id="tabALL" class="tab-btn px-3 py-1.5 rounded-md text-xs transition-all text-slate-500">전체</button>
+        <button onclick="setCategory('E')" id="tabE" class="tab-btn px-3 py-1.5 rounded-md text-xs transition-all text-slate-500">외장</button>
+        <button onclick="setCategory('I')" id="tabI" class="tab-btn px-3 py-1.5 rounded-md text-xs transition-all text-slate-500">내장</button>
+      </div>
+    </header>
+
+    <div class="p-3 bg-slate-50/50 border-b border-slate-100 flex flex-col gap-2 flex-shrink-0">
+      <div class="relative">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="searchInput" oninput="onSearch()" placeholder="현장명, 지역, 색상 검색..."
+          class="w-full pl-9 pr-8 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-brand-800 transition-all">
+        <button onclick="clearSearch()" id="clearBtn" class="absolute right-3 top-1/2 -translate-y-1/2 hidden text-slate-400">✕</button>
+      </div>
+      <div class="flex items-center justify-between">
+        <button onclick="openFilter()" class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-medium text-slate-600 transition-all">
+          ≡ 상세 필터
+          <span id="filterBadge" class="hidden bg-brand-800 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold"></span>
+        </button>
+        <div class="flex items-center gap-1">
+          <button onclick="setView('list')" id="btnList" class="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors" title="리스트 보기">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/>
+    <circle cx="4" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"/>
+  </svg>
+</button>
+          <button onclick="setView('grid')" id="btnGrid" class="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors" title="그리드 보기">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+</button>
+          <div class="h-4 w-px bg-slate-200 mx-1"></div>
+          <button onclick="doPrint()" class="p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors" title="인쇄">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="6 9 6 2 18 2 18 9"/>
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+    <rect x="6" y="14" width="12" height="8" rx="1"/>
+    <line x1="9" y1="14" x2="9" y2="14"/><line x1="15" y1="18" x2="15" y2="18"/>
+  </svg>
+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-4 py-2 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+      <span class="text-xs text-slate-400">검색결과 <strong id="resultCount" class="text-brand-800">0</strong>건</span>
+      <span class="text-[10px] text-slate-300">PREMIUM ANODIZED PANEL</span>
+    </div>
+
+    <div id="listContainer" class="flex-1 overflow-y-auto"></div>
+  </div>
+
+  <!-- 우측 상세 패널 -->
+  <div id="vDetail" class="hidden md:flex flex-1 h-full flex-col bg-white relative">
+    <div id="detPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-400 z-10">
+      <img src="nspace_logo.png" alt="N-SPACE" style="height:96px;width:auto;display:block;margin-bottom:20px;opacity:0.85;">
+      <p class="text-sm font-medium text-slate-500">목록에서 시공 실적을 선택해 주세요</p>
+      <p class="text-xs text-slate-400 mt-1">상세 도면 및 시공 디테일을 확인하실 수 있습니다</p>
+    </div>
+
+    <div id="detContent" class="w-full h-full flex flex-col" style="opacity:0;transition:opacity .3s">
+      <div class="h-16 px-4 border-b border-slate-100 flex items-center gap-3 flex-shrink-0">
+        <button onclick="closeMobile()" class="md:hidden p-2 rounded-lg hover:bg-slate-100">←</button>
+        <div class="overflow-hidden flex-1">
+          <h2 id="detName" class="text-sm md:text-base font-bold text-slate-900 truncate"></h2>
+          <p id="detSub" class="text-xs text-slate-400 truncate"></p>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto">
+        <!-- 메인 사진 슬라이더 -->
+        <div class="relative bg-slate-950 w-full overflow-hidden group" style="aspect-ratio:16/9">
+          <img id="heroImg" alt="" class="w-full h-full object-cover cursor-zoom-in transition-transform duration-300" style="display:none" onclick="openLightbox()">
+          <div id="heroPH" class="absolute inset-0 flex flex-col items-center justify-center text-slate-600 bg-slate-900">
+            <div class="text-5xl mb-3 opacity-30">🖼</div>
+            <span class="text-xs text-slate-500">사진 없음 — 폴더에 이미지를 추가하세요</span>
+            <span id="folderHint" class="text-[11px] text-slate-600 mt-1 font-mono"></span>
+          </div>
+          <button onclick="prevPhoto()" class="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg">‹</button>
+          <button onclick="nextPhoto()" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity text-lg">›</button>
+          <div id="photoBadge" class="absolute bottom-3 right-3 bg-black/60 px-2.5 py-1 rounded-full text-[11px] text-white font-semibold"></div>
+        </div>
+
+        <!-- 기본 정보 -->
+        <div class="p-5 border-b border-slate-100">
+          <span id="catBadge" class="inline-block px-2.5 py-1 text-[10px] font-bold rounded-md mb-2"></span>
+          <h1 id="detTitle" class="text-xl font-extrabold text-slate-900 mb-1"></h1>
+          <p class="text-xs text-slate-500">📍 <span id="detAddr"></span></p>
+        </div>
+
+        <!-- 스펙 그리드 -->
+        <div class="p-5 border-b border-slate-100 bg-slate-50/50">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">기술 및 자재 사양</h3>
+          <div id="specGrid" class="grid grid-cols-2 gap-3"></div>
+        </div>
+
+        <!-- 상세도 -->
+        <div class="p-5 border-b border-slate-100">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">설치 디테일</h3>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <div id="detImgBox" class="flex-1 min-h-[140px] bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center p-4 overflow-hidden cursor-zoom-in" onclick="openDetailLb()">
+              <img id="detailImg" alt="" class="max-h-32 object-contain" style="display:none">
+              <div id="detailPH" class="flex flex-col items-center text-slate-400">
+                <div class="text-3xl mb-2">📐</div>
+                <span class="text-xs">상세 도면</span>
+              </div>
+            </div>
+            <div class="sm:w-1/3 flex flex-col gap-3 justify-between">
+              <p class="text-xs text-slate-500 leading-relaxed">해당 현장에 적용된 아노다이징 판넬 시스템 설계 도면 및 CAD 자료를 제공합니다.</p>
+              <a id="cadBtn" href="#" class="w-full bg-brand-800 text-white text-xs font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 opacity-40 pointer-events-none">
+                ⬇ CAD 파일 다운로드
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 코멘트 -->
+        <div class="p-5">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">코멘트</h3>
+          <div id="commentBox" class="p-4 bg-amber-50/50 border-l-4 border-amber-400 rounded-r-xl text-slate-700 text-sm leading-relaxed"></div>
+        </div>
+      </div>
+
+      <!-- 이전/다음 -->
+      <div class="h-14 px-4 border-t border-slate-100 flex items-center justify-between flex-shrink-0">
+        <div class="flex gap-1.5">
+          <button id="btnPrev" onclick="moveProj(-1)" class="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 disabled:opacity-30">◀</button>
+          <button id="btnNext" onclick="moveProj(1)" class="px-3 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 disabled:opacity-30">▶</button>
+        </div>
+        <span class="text-xs font-bold tracking-wider text-slate-300">N-SPACE</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 필터 패널 -->
+  <div id="filterPanel" class="fixed inset-0 bg-black/50 z-50 flex justify-end" style="opacity:0;pointer-events:none;transition:opacity .3s">
+    <div id="filterInner" class="w-full max-w-sm bg-white h-full shadow-2xl flex flex-col" style="transform:translateX(100%);transition:transform .3s">
+      <div class="h-16 px-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+        <h3 class="font-bold text-slate-900">필터 설정</h3>
+        <button onclick="closeFilter()" class="p-2 rounded-lg hover:bg-slate-100 text-slate-500">✕</button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-4 space-y-5">
+        <div><h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">시공 연도</h4><div id="fYears" class="flex flex-wrap gap-1.5"></div></div>
+        <div><h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">지역</h4><div id="fRegions" class="flex flex-wrap gap-1.5"></div></div>
+        <div><h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">제품</h4><div id="fProducts" class="flex flex-wrap gap-1.5"></div></div>
+        <div><h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">조인트 방식</h4><div id="fJoints" class="flex flex-wrap gap-1.5"></div></div>
+        <div><h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">색상군</h4><div id="fColors" class="flex flex-wrap gap-1.5"></div></div>
+      </div>
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex gap-2">
+        <button onclick="resetFilter()" class="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold">초기화</button>
+        <button onclick="applyFilter()" class="flex-[2] py-3 bg-brand-800 text-white rounded-lg text-xs font-bold">적용</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 라이트박스 -->
+<div id="lightbox" class="fixed inset-0 bg-black/95 z-[9999] flex-col items-center justify-center p-4" style="display:none">
+  <button onclick="closeLightbox()" class="absolute top-4 right-4 p-2 bg-white/10 text-white rounded-full text-xl">✕</button>
+  <button onclick="lbPrev()" class="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 text-white rounded-full text-2xl">‹</button>
+  <button onclick="lbNext()" class="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 text-white rounded-full text-2xl">›</button>
+  <img id="lbImg" src="" alt="" class="max-w-full max-h-[88vh] rounded-lg object-contain">
+  <p id="lbCap" class="text-slate-300 text-xs mt-3 text-center"></p>
+</div>
+
+<script>
+// ── 프로젝트 데이터 (엑셀 기반 내장) ──────────────
+function imgErr(el){el.style.display="none";}
+var DB = [] /* 데이터는 data.js(setup.py 실행) 에서 로드됩니다 */
+
+// ── 상태 ────────────────────────────────────────
+var allP=[], filtered=[], curP=null;
+var viewMode='list', curCat='ALL';
+var activeF={year:[],region:[],product:[],joint:[],color:[]};
+var photos=[], photoIdx=0;
+
+// 제품명 → CAD 파일명 매핑
+var CAD_MAP = {
+  '복합패널':   'ALUMIX_ACM',
+  '플럭스패널': 'ALUMIX_FLUX',
+  '하니컴패널': 'ALUMIX_HONEYCOMB',
+  'NT패널':    'FUNDERMAX_NT_M-LOOK',
+  '엠룩패널':  'FUNDERMAX_NT_M-LOOK',
+  '웨이브패널': 'ALUMIX_WAVE',
+  'EFP패널':   'ALUMIX_EFP'
+};
+
+window.onload = function(){
+  if(window.PROJECT_DATA && window.PROJECT_DATA.length > 0){
+    allP = window.PROJECT_DATA.slice().sort(function(a,b){ return (b.year||0)-(a.year||0); });
+    buildFilters();
+    setCategory('ALL');
+  } else {
+    // data.js 없음 → 안내
+    document.getElementById('resultCount').textContent = '0';
+    document.getElementById('listContainer').innerHTML =
+      '<div class="flex flex-col items-center justify-center py-16 px-6 text-center text-slate-400">'
+      +'<div class="text-4xl mb-4">⚠️</div>'
+      +'<p class="text-sm font-bold text-slate-600 mb-1">data.js 파일이 없습니다</p>'
+      +'<p class="text-xs leading-relaxed">CMD에서 setup.py를 실행해 주세요:<br>'
+      +'<code class="bg-slate-100 px-2 py-1 rounded text-slate-700 text-xs mt-2 inline-block">python setup.py</code></p>'
+      +'</div>';
+  }
+};
+
+// ── 카테고리 ─────────────────────────────────────
+function setCategory(cat){
+  curCat=cat;
+  document.querySelectorAll('.tab-btn').forEach(function(b){
+    b.classList.remove('tab-active');
+  });
+  document.getElementById('tab'+cat).classList.add('tab-active');
+  doFilter();
+}
+
+// ── 검색 ─────────────────────────────────────────
+function onSearch(){
+  var v=document.getElementById('searchInput').value;
+  document.getElementById('clearBtn').classList.toggle('hidden',!v);
+  doFilter();
+}
+function clearSearch(){
+  document.getElementById('searchInput').value='';
+  document.getElementById('clearBtn').classList.add('hidden');
+  doFilter();
+}
+
+// ── 필터 빌드 ────────────────────────────────────
+function buildFilters(){
+  var years=new Set(),regions=new Set(),products=new Set(),colors=new Set(),joints=new Set();
+  allP.forEach(function(p){
+    if(p.year) years.add(p.year);
+    if(p.region) regions.add(p.region);
+    if(p.product) products.add(p.product);
+    if(p.d1) joints.add(p.d1);
+    if(p.color){
+      // 괄호 안 분류 전체 추출 (유광 계열, 화이트 계열 등 복수 가능)
+      var re=/\(([^)]+)\)/g, cm;
+      while((cm=re.exec(p.color))!==null){
+        var g=cm[1].replace(/\s*계열/g,'').trim();
+        if(g) colors.add(g);
+      }
+    }
+  });
+  mkFilterBtns('fYears',Array.from(years).sort(function(a,b){return b-a;}),'year');
+  mkFilterBtns('fRegions',Array.from(regions).sort(),'region');
+  mkFilterBtns('fProducts',Array.from(products).sort(),'product');
+  mkFilterBtns('fJoints',Array.from(joints).sort(),'joint');
+  mkFilterBtns('fColors',Array.from(colors).sort(),'color');
+}
+
+function mkFilterBtns(id,list,type){
+  var el=document.getElementById(id); el.innerHTML='';
+  list.forEach(function(val){
+    var b=document.createElement('button');
+    b.className='fc px-3 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 rounded-full text-xs font-semibold text-slate-600 transition-all';
+    b.textContent=val;
+    b.onclick=function(){
+      var idx=activeF[type].indexOf(val);
+      if(idx>-1){ activeF[type].splice(idx,1); b.className='fc px-3 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 rounded-full text-xs font-semibold text-slate-600 transition-all'; }
+      else{ activeF[type].push(val); b.className='fc px-3 py-1.5 border border-brand-800 bg-brand-800 rounded-full text-xs font-semibold text-white transition-all'; }
+    };
+    el.appendChild(b);
+  });
+}
+
+function openFilter(){
+  document.getElementById('filterPanel').style.cssText='opacity:1;pointer-events:auto;transition:opacity .3s';
+  document.getElementById('filterInner').style.transform='translateX(0)';
+}
+function closeFilter(){
+  document.getElementById('filterPanel').style.cssText='opacity:0;pointer-events:none;transition:opacity .3s';
+  document.getElementById('filterInner').style.transform='translateX(100%)';
+}
+function resetFilter(){
+  activeF={year:[],region:[],product:[],joint:[],color:[]};
+  document.querySelectorAll('.fc').forEach(function(b){
+    b.className='fc px-3 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 rounded-full text-xs font-semibold text-slate-600 transition-all';
+  });
+  doFilter();
+}
+function applyFilter(){ doFilter(); closeFilter(); }
+
+// ── 필터링 ───────────────────────────────────────
+function doFilter(){
+  var q=document.getElementById('searchInput').value.toLowerCase().trim();
+  filtered=allP.filter(function(p){
+    if(curCat!=='ALL' && p.cat!==curCat) return false;
+    if(q){ var h=(p.name+p.region+p.address+p.color+p.product).toLowerCase(); if(!h.includes(q)) return false; }
+    if(activeF.year.length && !activeF.year.includes(p.year)) return false;
+    if(activeF.region.length && !activeF.region.includes(p.region)) return false;
+    if(activeF.product.length && !activeF.product.includes(p.product)) return false;
+    if(activeF.joint.length && !activeF.joint.includes(p.d1)) return false;
+    if(activeF.color.length){
+      var re2=/\(([^)]+)\)/g, cm2, pColors=[];
+      while((cm2=re2.exec(p.color))!==null){
+        pColors.push(cm2[1].replace(/\s*계열/g,'').trim());
+      }
+      if(!activeF.color.some(function(c){ return pColors.indexOf(c)>-1; })) return false;
+    }
+    return true;
+  });
+  var total=activeF.year.length+activeF.region.length+activeF.product.length+activeF.joint.length+activeF.color.length;
+  var badge=document.getElementById('filterBadge');
+  badge.textContent=total; badge.classList.toggle('hidden',total===0);
+  document.getElementById('resultCount').textContent=filtered.length;
+  renderList();
+}
+
+// ── 뷰 모드 ─────────────────────────────────────
+function setView(m){
+  viewMode=m;
+  document.getElementById('btnList').style.color=m==='list'?'#1e3e62':'';
+  document.getElementById('btnGrid').style.color=m==='grid'?'#1e3e62':'';
+  renderList();
+}
+
+// ── 목록 렌더링 (data-idx 방식으로 onclick 안전하게) ──
+function renderList(){
+  var c=document.getElementById('listContainer');
+  if(!filtered.length){
+    c.innerHTML='<div class="flex flex-col items-center justify-center py-20 text-slate-400"><p class="text-sm">검색 결과가 없습니다</p></div>';
+    return;
+  }
+  var phIdx=window.PHOTO_INDEX||{};
+  if(viewMode==='list'){
+    var el=document.createElement('div');
+    el.className='flex flex-col divide-y divide-slate-100';
+    filtered.forEach(function(p,i){
+      var isAct=curP&&curP.folderName===p.folderName;
+      var div=document.createElement('div');
+      div.className='flex items-center p-3.5 cursor-pointer bg-white transition-all border-l-4 '+(isAct?'border-brand-800 bg-blue-50/40':'border-transparent hover:bg-slate-50');
+      div.dataset.idx=i;
+      div.onclick=function(){ selectProject(filtered[parseInt(this.dataset.idx)]); };
+      var catCls=p.cat==='E'?'text-blue-600 bg-blue-50':'text-amber-700 bg-amber-50';
+      var catTxt=p.cat==='E'?'외장':'내장';
+      var hasPh=phIdx[p.folderName]&&phIdx[p.folderName].length>0;
+      div.innerHTML='<div class="flex-1 min-w-0 pr-2">'
+        +'<div class="flex items-center gap-1.5 mb-1">'
+        +'<span class="text-[10px] px-1.5 py-0.5 rounded font-bold '+catCls+'">'+catTxt+'</span>'
+        +'<span class="text-[11px] font-bold text-slate-400">'+p.year+'</span>'
+        +'<span class="text-[11px] text-slate-400">'+p.region+'</span>'
+        +(hasPh?'<span class="text-[10px] text-blue-500">📷'+phIdx[p.folderName].length+'</span>':'')
+        +'</div>'
+        +'<h4 class="text-sm font-bold text-slate-900 truncate">'+p.name+'</h4>'
+        +'<div class="flex flex-wrap gap-1 mt-1">'
+        +'<span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">'+p.product+'</span>'
+        +'<span class="text-[10px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">'+(p.colorClean||p.color.split('(')[0].trim())+'</span>'
+        +'</div></div>'
+        +'<span class="text-slate-300 text-lg">›</span>';
+      el.appendChild(div);
+    });
+    c.innerHTML='';
+    c.appendChild(el);
+  } else {
+    var el=document.createElement('div');
+    el.className='grid grid-cols-2 gap-2.5 p-3';
+    filtered.forEach(function(p,i){
+      var isAct=curP&&curP.folderName===p.folderName;
+      var hasPh=phIdx[p.folderName]&&phIdx[p.folderName].length>0;
+      var div=document.createElement('div');
+      div.className='bg-white rounded-xl overflow-hidden shadow-sm cursor-pointer transition-all hover:shadow-md '+(isAct?'ring-2 ring-brand-800':'border border-slate-100');
+      div.dataset.idx=i;
+      div.onclick=function(){ selectProject(filtered[parseInt(this.dataset.idx)]); };
+      var catCls=p.cat==='E'?'bg-blue-600':'bg-amber-500';
+      var catTxt=p.cat==='E'?'외장':'내장';
+      var thumb=hasPh?'<img src="photos/'+p.folderName+'/'+phIdx[p.folderName][0]+'" class="w-full h-full object-cover" loading="lazy" onerror="imgErr(this)">':'';
+      div.innerHTML='<div class="relative w-full bg-brand-900 overflow-hidden" style="aspect-ratio:16/9">'
+        +'<span class="absolute top-2 left-2 z-10 '+catCls+' text-[9px] font-bold px-1.5 py-0.5 rounded text-white">'+catTxt+'</span>'
+        +thumb
+        +'</div>'
+        +'<div class="p-2.5"><p class="text-[10px] text-slate-400">'+p.year+' · '+p.region+'</p>'
+        +'<h4 class="text-xs font-extrabold text-slate-800 leading-snug mt-0.5" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">'+p.name+'</h4></div>';
+      el.appendChild(div);
+    });
+    c.innerHTML='';
+    c.appendChild(el);
+  }
+}
+
+// ── 프로젝트 선택 ────────────────────────────────
+function selectProject(p){
+  curP=p;
+  document.getElementById('vDetail').classList.remove('hidden');
+  document.getElementById('vDetail').classList.add('flex');
+  if(window.innerWidth<768) document.getElementById('vList').classList.add('hidden');
+  document.getElementById('detPlaceholder').style.display='none';
+  document.getElementById('detContent').style.opacity='1';
+
+  document.getElementById('detName').textContent=p.name;
+  document.getElementById('detSub').textContent=p.address;
+  document.getElementById('detTitle').textContent=p.name;
+  document.getElementById('detAddr').textContent=p.address;
+  document.getElementById('commentBox').textContent=p.comment||'';
+
+  var badge=document.getElementById('catBadge');
+  if(p.cat==='E'){ badge.textContent='익스테리어'; badge.className='inline-block px-2.5 py-1 text-[10px] font-bold rounded-md mb-2 bg-blue-50 text-blue-700'; }
+  else { badge.textContent='인테리어'; badge.className='inline-block px-2.5 py-1 text-[10px] font-bold rounded-md mb-2 bg-amber-50 text-amber-700'; }
+
+  document.getElementById('specGrid').innerHTML=[
+    ['시공 연도',p.year+'년'],['적용 제품',p.product],
+    ['색상 사양',p.colorClean||p.color.split('(')[0].trim()],['두께',p.thick],
+    ['줄눈폭',(p.gap||'-')+'mm'],['공법',p.d1+' / '+p.d2]
+  ].map(function(s){
+    return '<div class="bg-white p-2.5 rounded-lg border border-slate-200/50"><p class="text-[10px] font-bold text-slate-400">'+s[0]+'</p><p class="text-xs font-bold text-slate-800 mt-0.5 truncate">'+s[1]+'</p></div>';
+  }).join('');
+
+  // 사진 로드
+  photos=[];photoIdx=0;
+  var phIdx=window.PHOTO_INDEX||{};
+  var list=phIdx[p.folderName]||[];
+  list.forEach(function(fn){ photos.push('photos/'+p.folderName+'/'+fn); });
+  updatePhoto();
+
+  // 상세도
+  var detailsList=window.DETAILS_LIST||[];
+  var dImg=document.getElementById('detailImg');
+  var dPH=document.getElementById('detailPH');
+  // d1(조인트방식) 먼저, 없으면 d2(고정방식) 시도
+  var found=detailsList.find(function(f){ return f.replace(/\.[^.]+$/,'')===p.d1; });
+  if(!found) found=detailsList.find(function(f){ return f.replace(/\.[^.]+$/,'')===p.d2; });
+  if(found){ dImg.src='details/'+found; dImg.style.display='block'; dPH.style.display='none'; }
+  else { dImg.style.display='none'; dPH.style.display='flex'; }
+
+  // CAD 다운로드 버튼
+  var cadFiles=window.CAD_FILES||[];
+  var cadBtn=document.getElementById('cadBtn');
+  var cadBase=CAD_MAP[p.product]||null;
+  var cadFile=cadBase?cadFiles.find(function(f){ return f.replace(/\.[^.]+$/,'')===cadBase; }):null;
+  if(cadFile){
+    cadBtn.href='details/'+cadFile;
+    cadBtn.setAttribute('download', cadFile);
+    cadBtn.classList.remove('opacity-40','pointer-events-none');
+  } else {
+    cadBtn.href='#';
+    cadBtn.removeAttribute('download');
+    cadBtn.classList.add('opacity-40','pointer-events-none');
+  }
+
+  // 이전/다음
+  var idx=filtered.findIndex(function(x){ return x.folderName===p.folderName; });
+  document.getElementById('btnPrev').disabled=idx<=0;
+  document.getElementById('btnNext').disabled=idx>=filtered.length-1;
+
+  renderList();
+}
+
+// ── 사진 ─────────────────────────────────────────
+function updatePhoto(){
+  var img=document.getElementById('heroImg'),ph=document.getElementById('heroPH');
+  var badge=document.getElementById('photoBadge');
+  if(photos.length){
+    img.src=photos[photoIdx]; img.style.display='block'; ph.style.display='none';
+    badge.textContent=(photoIdx+1)+' / '+photos.length;
+  } else {
+    img.style.display='none'; ph.style.display='flex'; badge.textContent='';
+    if(curP) document.getElementById('folderHint').textContent='photos/'+curP.folderName+'/';
+  }
+}
+function prevPhoto(){ if(photos.length>1){ photoIdx=(photoIdx-1+photos.length)%photos.length; updatePhoto(); } }
+function nextPhoto(){ if(photos.length>1){ photoIdx=(photoIdx+1)%photos.length; updatePhoto(); } }
+
+function moveProj(d){
+  var idx=filtered.findIndex(function(x){ return x.folderName===curP.folderName; });
+  if(idx+d>=0&&idx+d<filtered.length) selectProject(filtered[idx+d]);
+}
+function closeMobile(){
+  document.getElementById('vList').classList.remove('hidden');
+  document.getElementById('vDetail').classList.add('hidden');
+}
+
+// ── 라이트박스 ───────────────────────────────────
+function openLightbox(){ if(!photos.length) return; var cap=(curP?curP.name:'')+(photos.length>1?' ('+(photoIdx+1)+'/'+photos.length+')':''); showLb(photos[photoIdx],cap); }
+function openDetailLb(){ var img=document.getElementById('detailImg'); if(img.style.display!=='none') showLb(img.src,'상세도'); }
+function showLb(src,cap){ document.getElementById('lbImg').src=src; document.getElementById('lbCap').textContent=cap||''; document.getElementById('lightbox').style.display='flex'; }
+function closeLightbox(){ document.getElementById('lightbox').style.display='none'; }
+function lbPrev(){ if(photos.length>1){ photoIdx=(photoIdx-1+photos.length)%photos.length; document.getElementById('lbImg').src=photos[photoIdx]; } }
+function lbNext(){ if(photos.length>1){ photoIdx=(photoIdx+1)%photos.length; document.getElementById('lbImg').src=photos[photoIdx]; } }
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowLeft') lbPrev(); if(e.key==='ArrowRight') lbNext(); });
+
+// ── 인쇄 ────────────────────────────────────────
+function doPrint(){
+  if(!filtered.length) return;
+  var w=window.open('','_blank');
+  var catTxt=curCat==='ALL'?'전체':curCat==='E'?'익스테리어':'인테리어';
+  var rows=filtered.map(function(p,i){
+    return '<tr><td>'+(i+1)+'</td><td>'+p.year+'</td><td class="l b">'+p.name+'</td><td>'+p.region+'</td><td>'+(p.cat==='E'?'외장':'내장')+'</td><td>'+p.product+'</td><td class="l">'+(p.colorClean||p.color.split('(')[0].trim())+'</td><td>'+p.thick+'</td></tr>';
+  }).join('');
+  w.document.write('<html><head><title>ALUMIX 시공실적</title><style>body{font-family:sans-serif;padding:20px}h2{color:#1e3e62;border-bottom:2px solid #1e3e62;padding-bottom:8px}table{width:100%;border-collapse:collapse;margin-top:12px;font-size:11px}th{background:#f0f4ff;padding:8px;border:1px solid #ddd}td{padding:7px 8px;border:1px solid #ddd;text-align:center}.l{text-align:left}.b{font-weight:bold}</style></head><body><h2>ALUMIX 시공실적 — '+catTxt+' '+filtered.length+'건 &nbsp;<small style="color:#999;font-weight:normal">'+new Date().toLocaleDateString("ko-KR")+'</small></h2><table><thead><tr><th>No</th><th>연도</th><th>현장명</th><th>지역</th><th>구분</th><th>제품</th><th>색상</th><th>두께</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>');
+  w.document.close();
+  setTimeout(function(){ w.print(); },400);
+}
+</script>
+</body>
+</html>
