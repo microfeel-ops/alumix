@@ -775,23 +775,39 @@ function doPrint(){
 </style>
 <script>
 (function(){
-  var PW='ns2077@alumix.acm', SK='alumix_auth';
+  var SK='alumix_auth';
   if(sessionStorage.getItem(SK)==='1'){ document.getElementById('loginOverlay').style.display='none'; return; }
+
+  function tryLogin(pw){
+    fetch('pw.txt?_='+Date.now())
+      .then(function(r){ return r.text(); })
+      .then(function(txt){
+        var list=txt.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
+        if(list.includes(pw)){
+          sessionStorage.setItem(SK,'1');
+          var o=document.getElementById('loginOverlay');
+          o.style.transition='opacity 0.4s'; o.style.opacity='0';
+          setTimeout(function(){ o.style.display='none'; },400);
+        } else {
+          showErr();
+        }
+      })
+      .catch(function(){ showErr('서버 오류. 잠시 후 다시 시도해주세요.'); });
+  }
+
+  function showErr(msg){
+    document.getElementById('loginErr').textContent=msg||'비밀번호가 올바르지 않습니다.';
+    var b=document.getElementById('loginBox');
+    b.style.animation='shake 0.4s ease';
+    setTimeout(function(){ b.style.animation=''; },400);
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+
   window.doLogin=function(){
-    var v=document.getElementById('pwInput').value;
-    if(v===PW){
-      sessionStorage.setItem(SK,'1');
-      var o=document.getElementById('loginOverlay');
-      o.style.transition='opacity 0.4s'; o.style.opacity='0';
-      setTimeout(function(){ o.style.display='none'; },400);
-    } else {
-      document.getElementById('loginErr').textContent='비밀번호가 올바르지 않습니다.';
-      var b=document.getElementById('loginBox');
-      b.style.animation='shake 0.4s ease';
-      setTimeout(function(){ b.style.animation=''; },400);
-      document.getElementById('pwInput').value='';
-      document.getElementById('pwInput').focus();
-    }
+    var v=document.getElementById('pwInput').value.trim();
+    if(!v) return;
+    tryLogin(v);
   };
 })();
 </script>
