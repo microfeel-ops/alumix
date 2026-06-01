@@ -53,7 +53,7 @@
     <div class="p-3 bg-slate-50/50 border-b border-slate-100 flex flex-col gap-2 flex-shrink-0">
       <div class="relative">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" id="searchInput" oninput="onSearch()" placeholder="현장명, 지역, 색상 검색..."
+        <input type="text" id="searchInput" oninput="onSearch()" placeholder="현장명, 지역, 색상, 적용부위, 코멘트 검색..."
           class="w-full pl-9 pr-8 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-brand-800 transition-all">
         <button onclick="clearSearch()" id="clearBtn" class="absolute right-3 top-1/2 -translate-y-1/2 hidden text-slate-400">✕</button>
       </div>
@@ -342,7 +342,7 @@ function doFilter(){
   var q=document.getElementById('searchInput').value.toLowerCase().trim();
   filtered=allP.filter(function(p){
     if(curCat!=='ALL' && p.cat!==curCat) return false;
-    if(q){ var h=(p.name+p.region+p.address+p.color+p.product).toLowerCase(); if(!h.includes(q)) return false; }
+    if(q){ var h=(p.name+p.region+p.address+p.color+p.product+p.part+p.comment).toLowerCase(); if(!h.includes(q)) return false; }
     if(activeF.year.length && !activeF.year.includes(p.year)) return false;
     if(activeF.region.length && !activeF.region.includes(p.region)) return false;
     if(activeF.product.length && !activeF.product.includes(p.product)) return false;
