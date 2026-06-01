@@ -547,6 +547,7 @@ function moveProj(d){
 function closeMobile(){
   var vd=document.getElementById('vDetail');
   vd.classList.remove('slide-in');
+  history.replaceState(null,'');
   setTimeout(function(){
     vd.classList.add('hidden');
     vd.classList.remove('flex');
