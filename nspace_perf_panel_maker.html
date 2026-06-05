@@ -333,20 +333,16 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 <!-- RIGHT PANEL -->
 <div class="panel right">
 
-    <div class="sec">
+      <div class="sec">
     <div class="sec-title">Export Lock 🔒</div>
-    <div style="font-size:10px;color:var(--muted);line-height:1.7;padding:.5rem .6rem;background:var(--s2);border-radius:5px;border:.5px solid var(--border)">
-      HTML과 <strong>같은 폴더</strong>에<br>
-      <code style="font-family:var(--mono);color:var(--accent)">pw.txt</code> 파일을 생성하고<br>
-      비번을 한 줄씩 입력하세요.<br><br>
-      DXF·SVG·PDF 내보내기 시<br>
-      pw.txt의 비번과 대조합니다.
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.45rem .6rem;background:var(--s2);border-radius:5px;border:.5px solid var(--border)">
+      <span id="pwStatus" style="font-size:11px;color:var(--muted)">—</span>
+      <button onclick="loadPwFile()" title="pw.txt 다시 로드" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:16px;padding:0 .2rem;line-height:1;display:flex;align-items:center" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      </button>
     </div>
-    <button class="btn" onclick="loadPwFile()" style="margin-top:.4rem;font-size:10px">
-      🔄 pw.txt 다시 로드
-    </button>
-    <div id="pwStatus" style="font-size:10px;color:var(--muted);margin-top:.3rem;text-align:center">—</div>
   </div>
+
 
 
   <div class="sec">
@@ -413,11 +409,11 @@ function loadPwFile(){
         .map(function(l){return l.trim();})
         .filter(function(l){return l.length>0;});
       console.log('pw.txt 로드 완료: '+validPasswords.length+'개 비번');
-      var st=document.getElementById('pwStatus');if(st)st.textContent='✓ '+validPasswords.length+'개 비번 로드됨';
+      var st=document.getElementById('pwStatus');if(st){st.textContent='패스워드 체크 완료';st.style.color='var(--green)';}
     })
     .catch(function(e){
       console.warn('pw.txt 로드 실패:', e.message);
-      var st2=document.getElementById('pwStatus');if(st2)st2.textContent='✗ pw.txt 없음';
+      var st2=document.getElementById('pwStatus');if(st2){st2.textContent='패스워드 오류';st2.style.color='var(--muted)';}
       validPasswords=[];
     });
 }
