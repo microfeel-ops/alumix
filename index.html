@@ -44,15 +44,26 @@
     <img src="alumix_logo.png" alt="ALUMIX" style="height:36px;width:auto;mix-blend-mode:multiply;display:block;">
   </div>
   
-  <div class="flex items-center gap-3">
-    <a href="nspace_ppm.html" class="px-3 py-1.5 bg-brand-800 text-white rounded-md text-xs font-bold hover:bg-brand-900 transition-colors shadow-sm">
-      PPM
-    </a>
-    
-    <div class="flex bg-slate-100 p-1 rounded-lg gap-1">
+  <div class="flex items-center gap-2">
+    <div class="flex bg-slate-100 p-1 rounded-lg gap-1 items-center">
       <button onclick="setCategory('ALL')" id="tabALL" class="tab-btn px-3 py-1.5 rounded-md text-xs transition-all text-slate-500">전체</button>
       <button onclick="setCategory('E')" id="tabE" class="tab-btn px-3 py-1.5 rounded-md text-xs transition-all text-slate-500">외장</button>
       <button onclick="setCategory('I')" id="tabI" class="tab-btn px-3 py-1.5 rounded-md text-xs transition-all text-slate-500">내장</button>
+      <div class="w-px h-4 bg-slate-300 mx-0.5"></div>
+      <a href="nspace_ppm.html" class="tab-btn flex items-center justify-center w-8 h-7 rounded-md transition-all text-slate-500 hover:bg-white hover:text-brand-800 hover:shadow-sm" title="PPM 자재 관리">
+        <!-- 펀칭 패턴 아이콘 (3×3 동그라미 격자) -->
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="2" cy="2" r="1.5"/>
+          <circle cx="7.5" cy="2" r="1.5"/>
+          <circle cx="13" cy="2" r="1.5"/>
+          <circle cx="2" cy="7.5" r="1.5"/>
+          <circle cx="7.5" cy="7.5" r="1.5"/>
+          <circle cx="13" cy="7.5" r="1.5"/>
+          <circle cx="2" cy="13" r="1.5"/>
+          <circle cx="7.5" cy="13" r="1.5"/>
+          <circle cx="13" cy="13" r="1.5"/>
+        </svg>
+      </a>
     </div>
   </div>
 </header>
@@ -789,21 +800,26 @@ function doPrint(){
   var SK='alumix_auth';
   if(sessionStorage.getItem(SK)==='1'){ document.getElementById('loginOverlay').style.display='none'; return; }
 
+  var LOCAL_PW='ns2077@naver.com';
+
+  function grantAccess(){
+    sessionStorage.setItem(SK,'1');
+    var o=document.getElementById('loginOverlay');
+    o.style.transition='opacity 0.4s'; o.style.opacity='0';
+    setTimeout(function(){ o.style.display='none'; },400);
+  }
+
   function tryLogin(pw){
     fetch('pw.txt?_='+Date.now())
       .then(function(r){ return r.text(); })
       .then(function(txt){
         var list=txt.split('\n').map(function(s){ return s.trim(); }).filter(Boolean);
-        if(list.includes(pw)){
-          sessionStorage.setItem(SK,'1');
-          var o=document.getElementById('loginOverlay');
-          o.style.transition='opacity 0.4s'; o.style.opacity='0';
-          setTimeout(function(){ o.style.display='none'; },400);
-        } else {
-          showErr();
-        }
+        if(list.includes(pw)){ grantAccess(); } else { showErr(); }
       })
-      .catch(function(){ showErr('서버 오류. 잠시 후 다시 시도해주세요.'); });
+      .catch(function(){
+        // 로컬 파일 환경(file://) — 내장 비번으로 fallback
+        if(pw===LOCAL_PW){ grantAccess(); } else { showErr(); }
+      });
   }
 
   function showErr(msg){

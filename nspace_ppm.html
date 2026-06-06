@@ -6,9 +6,6 @@
 <title>N-SPACE Perf. Panel Maker</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-
-
-
 :root{
   --bg:#f5f6f8;--s1:#ffffff;--s2:#f0f2f5;--s3:#e8eaed;
   --border:#e0e3e8;--border2:#c8ccd4;
@@ -115,7 +112,12 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .vtab{padding:.6rem 1rem;font-size:11px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:.04em;font-weight:500;transition:.15s}
 .vtab:hover{color:var(--accent)}
 .vtab.on{color:var(--accent);border-bottom-color:var(--accent)}
-.canvas-area{flex:1;position:relative;overflow:hidden;display:flex}
+.canvas-area{
+    flex:1;
+    min-height:0;
+    overflow-y:auto; /* 👈 세로 스크롤 허용 */
+    -webkit-overflow-scrolling:touch; /* 👈 모바일에서 부드러운 스크롤 */
+  }
 .view{display:none;width:100%;height:100%}
 .view.active{display:flex}
 .split{display:grid;grid-template-columns:1fr 1fr;width:100%;height:100%}
@@ -133,13 +135,192 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .warn{font-size:10px;color:#8a5a00;background:#fff8e6;border-bottom:1px solid #f0d080;padding:.3rem 1.25rem;display:none;flex-shrink:0;font-weight:500}
 @media print{body::after{content:"N-SPACE CONFIDENTIAL";position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:48px;color:rgba(30,45,90,0.08);font-weight:700;white-space:nowrap;z-index:9999}.panel,.view-tabs,header,.btn-group{display:none!important}.app{display:block}.center{display:block}canvas{max-width:100%}}
 
-
-
 /* 캔버스 줌/팬 */
 .canvas-wrap{cursor:grab}
 .canvas-wrap.grabbing{cursor:grabbing}
 .canvas-wrap canvas{transform-origin:0 0;transition:none}
 
+/* ═══════════════════════════════
+   모바일 반응형
+═══════════════════════════════ */
+
+/* 데스크탑: 모바일 전용 숨김 (에러 괄호 제거 완료) */
+
+/* 헤더 모바일 */
+
+/* 모바일 분할뷰 스크롤 및 하단바 가림 방지 강제 적용 */
+
+/* ════════════════════════════════════════
+   모바일 반응형 (max-width: 1023px) — 통합
+════════════════════════════════════════ */
+@media (max-width: 1023px) {
+
+  /* 전체 레이아웃 */
+  body {
+    display: block;
+    height: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 56px; /* 하단바 높이만큼 여백 */
+  }
+  header {
+    flex-shrink: 0;
+    height: 44px;
+    padding: 0 .75rem;
+  }
+  .logo-img { height: 20px; }
+  .logo-divider { height: 12px; margin: 0 .4rem; }
+  .logo-nspace { display: none; }
+  .hbadge { display: none; }
+
+  /* 앱 구조 */
+  .app {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    height: auto;
+    overflow: visible;
+    position: relative;
+  }
+
+  /* 데스크탑 패널 숨김 */
+  .panel, .panel.right { display: none; }
+  .btn-group { display: none; }
+
+  /* 캔버스 영역 */
+  .center {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .canvas-area {
+    height: auto;
+    overflow-y: visible;
+    display: block;
+    padding-bottom: 80px;
+  }
+  .view-tabs {
+    flex-shrink: 0;
+    padding: 0 .5rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .vtab { padding: .35rem .6rem; font-size: 10px; }
+
+  /* 분할뷰 — 상하 배치 */
+  .split {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  .pane-label { font-size: 9px; padding: .15rem .4rem; }
+
+  /* 하단 버튼바 — flex child (fixed 아님, 캔버스 안 가림) */
+  .mobile-action-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: var(--s1);
+    border-top: 1px solid var(--border);
+    padding: 0 .5rem;
+    padding-bottom: env(safe-area-inset-bottom);
+    align-items: center;
+    gap: .35rem;
+    z-index: 999;
+  }
+  .mob-btn {
+    flex: 1;
+    height: 38px;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    background: var(--s1);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: .15s;
+  }
+  .mob-btn.pri { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .mob-btn.settings {
+    flex: none;
+    width: 42px;
+    border-color: var(--accent);
+    color: var(--accent);
+    background: transparent;
+  }
+
+  /* 설정 패널 — fixed 오버레이, 버튼바 위 */
+  .mobile-panel {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0; right: 0;
+    bottom: calc(56px + env(safe-area-inset-bottom));
+    max-height: 65vh;
+    background: var(--s1);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.15);
+    z-index: 200;
+    transform: translateY(110%);
+    transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+  }
+  .mobile-panel.show { transform: translateY(0); }
+
+  /* 탭바 */
+  .mob-tabs {
+    display: flex;
+    flex-shrink: 0;
+    height: 44px;
+    border-bottom: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    overflow: hidden;
+  }
+  .mob-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: .15s;
+  }
+  .mob-tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* 스크롤 컨테이너 */
+  .mob-panel-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* 탭 패널 — 하단 여백은 margin-bottom으로 (padding 강제 아님) */
+  .mob-panel { display: none; padding: .75rem 1rem 0; }
+  .mob-panel.active { display: block; }
+  .mob-panel.active::after {
+    content: '';
+    display: block;
+    height: 1.5rem;
+  }
+}
+
+/* 데스크탑: 모바일 전용 숨김 */
+@media (min-width: 1024px) {
+  .mobile-action-bar { display: none; }
+  .mobile-panel { display: none; }
+}
 </style>
 </head>
 <body>
@@ -148,7 +329,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
   <div class="logo-wrap">
     <img class="logo-img" src="data:image/png;base64,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" alt="N-SPACE">
     <div class="logo-divider"></div>
-    <div class="logo-text">Perf. Panel Maker</div>
+    <div class="logo-text"><span class="logo-nspace">N-SPACE</span> <span class="logo-product">PERF. MAKER</span></div>
   </div>
   <div style="display:flex;gap:.5rem;align-items:center">
     <div class="hbadge">N-SPACE</div>
@@ -403,6 +584,178 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 
 </div><!-- /right -->
 </div><!-- /app -->
+
+<!-- ══ 모바일 설정 패널 (fixed, bottom:56px) ══ -->
+<div class="mobile-panel" id="mobilePanel">
+  <div class="mob-tabs">
+    <div class="mob-tab on"  onclick="setMobTab('panel')">패널</div>
+    <div class="mob-tab"     onclick="setMobTab('hole')">홀</div>
+    <div class="mob-tab"     onclick="setMobTab('image')">이미지</div>
+    <div class="mob-tab"     onclick="setMobTab('div')">분할</div>
+  </div>
+  <div class="mob-panel-scroll">
+    <div class="mob-panel active" id="mobPanel">
+      <div class="sec">
+        <div class="sec-title">Image Input</div>
+        <div class="drop-zone" onclick="document.getElementById('fi').click()" style="min-height:56px;padding:.5rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" style="width:16px;height:16px;margin:0 auto .2rem"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p id="dzTxtM" style="font-size:11px">클릭하여 이미지 선택</p>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">Panel Size</div>
+        <div class="spin-wrap">
+          <span class="spin-label">가로 Width</span>
+          <div class="spin-ctrl">
+            <input type="number" id="pwRM" value="1200" min="1" max="9999" step="1"
+              oninput="onSizeChange('w',this.value)" onchange="onSizeChange('w',this.value)">
+            <div class="spin-btns"><button class="spin-btn" onclick="adjSzM('w',10)">▲</button><button class="spin-btn" onclick="adjSzM('w',-10)">▼</button></div>
+          </div>
+          <span class="spin-unit">mm</span>
+        </div>
+        <div class="spin-wrap">
+          <span class="spin-label">세로 Height</span>
+          <div class="spin-ctrl">
+            <input type="number" id="phRM" value="2400" min="1" max="9999" step="1"
+              oninput="onSizeChange('h',this.value)" onchange="onSizeChange('h',this.value)">
+            <div class="spin-btns"><button class="spin-btn" onclick="adjSzM('h',10)">▲</button><button class="spin-btn" onclick="adjSzM('h',-10)">▼</button></div>
+          </div>
+          <span class="spin-unit">mm</span>
+        </div>
+        <div class="tog-row" style="margin-top:.5rem">
+          <span class="tog-label">비율 고정 Lock Aspect</span>
+          <div class="tog on" id="togAspectM" onclick="toggleAspectM()"></div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">Grid Layout — 배열</div>
+        <div class="seg">
+          <div class="sb on" id="layoutSqM" onclick="setLayout('square')">■ 사각</div>
+          <div class="sb" id="layoutHexM" onclick="setLayout('hex')">⬡ 육각</div>
+        </div>
+      </div>
+    </div>
+    <div class="mob-panel" id="mobHole">
+      <div class="sec">
+        <div class="sec-title">Hole Settings</div>
+        <div class="spin-wrap">
+          <span class="spin-label">격자 간격</span>
+          <div class="spin-ctrl">
+            <input type="number" id="gsRM" value="20" min="1" max="80" step="1"
+              oninput="syncMobile('gsR','gsRM');clamp(document.getElementById('gsR'),1,80);sched()">
+            <div class="spin-btns"><button class="spin-btn" onclick="adjM('gsR','gsRM',1)">▲</button><button class="spin-btn" onclick="adjM('gsR','gsRM',-1)">▼</button></div>
+          </div>
+          <span class="spin-unit">mm</span>
+        </div>
+        <div class="spin-wrap">
+          <span class="spin-label">Max Ø</span>
+          <div class="spin-ctrl">
+            <input type="number" id="mxRM" value="7" min="1" max="60" step="0.5"
+              oninput="syncMobile('mxR','mxRM');clamp(document.getElementById('mxR'),1,60);sched()">
+            <div class="spin-btns"><button class="spin-btn" onclick="adjM('mxR','mxRM',0.5)">▲</button><button class="spin-btn" onclick="adjM('mxR','mxRM',-0.5)">▼</button></div>
+          </div>
+          <span class="spin-unit">mm</span>
+        </div>
+        <div class="spin-wrap">
+          <span class="spin-label">Min Ø</span>
+          <div class="spin-ctrl">
+            <input type="number" id="mnRM" value="4" min="1" max="15" step="0.5"
+              oninput="syncMobile('mnR','mnRM');clamp(document.getElementById('mnR'),1,15);sched()">
+            <div class="spin-btns"><button class="spin-btn" onclick="adjM('mnR','mnRM',0.5)">▲</button><button class="spin-btn" onclick="adjM('mnR','mnRM',-0.5)">▼</button></div>
+          </div>
+          <span class="spin-unit">mm</span>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">Hole Shape — 홀 형태</div>
+        <div class="seg">
+          <div class="sb on" id="shapeCircleM" onclick="setShape('circle')">○ 원형</div>
+          <div class="sb" id="shapeSquareM" onclick="setShape('square')">□ 사각</div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">Statistics</div>
+        <div class="stats">
+          <div class="stat"><div class="sl">총 홀 수</div><div class="sv" id="iHM">—</div></div>
+          <div class="stat"><div class="sl">개구율</div><div class="sv" id="iOM">—</div></div>
+          <div class="stat"><div class="sl">Min Ø</div><div class="sv" id="iMnM">—</div></div>
+          <div class="stat"><div class="sl">Max Ø</div><div class="sv" id="iMxM">—</div></div>
+          <div class="stat wide"><div class="sl">Render Res</div><div class="sv" id="iRM">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="mob-panel" id="mobImage">
+      <div class="sec">
+        <div class="sec-title">Image Processing</div>
+        <div class="sld-wrap">
+          <div class="sld-row"><span class="sld-label">밝기</span><span class="sld-val" id="bVM">0.00</span></div>
+          <input type="range" id="bRM" min="-1" max="1" step="0.01" value="0"
+            oninput="document.getElementById('bR').value=this.value;document.getElementById('bV').textContent=document.getElementById('bVM').textContent=parseFloat(this.value).toFixed(2);sched()">
+        </div>
+        <div class="sld-wrap">
+          <div class="sld-row"><span class="sld-label">대비</span><span class="sld-val" id="cVM">1.00</span></div>
+          <input type="range" id="cRM" min="0" max="4" step="0.05" value="1.0"
+            oninput="document.getElementById('cR').value=this.value;document.getElementById('cV').textContent=document.getElementById('cVM').textContent=parseFloat(this.value).toFixed(2);sched()">
+        </div>
+        <div class="tog-row"><span class="tog-label">반전 Negate</span><div class="tog on" id="togInvM" onclick="toggle('inv');document.getElementById('togInvM').classList.toggle('on',state.inv)"></div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-title">Render Quality</div>
+        <div class="seg">
+          <div class="sb on" id="qFastM" onclick="setQM('fast')">빠름</div>
+          <div class="sb" id="qMedM" onclick="setQM('med')">중간</div>
+          <div class="sb" id="qFullM" onclick="setQM('full')">풀</div>
+        </div>
+      </div>
+    </div>
+    <div class="mob-panel" id="mobDiv">
+      <div class="sec">
+        <div class="sec-title">Panel Division</div>
+        <div class="tog-row"><span class="tog-label">패널 분할 사용</span><div class="tog" id="togDivM" onclick="toggleDivM()"></div></div>
+        <div id="divSettingsM" style="display:none;margin-top:.5rem">
+          <div class="tog-row"><span class="tog-label">격자 스냅</span><div class="tog" id="togSnapM" onclick="toggleSnapM()"></div></div>
+          <div class="spin-wrap">
+            <span class="spin-label">간섭 여유</span>
+            <div class="spin-ctrl">
+              <input type="number" id="divMarginM" value="0" min="0" max="50" step="1" oninput="syncMobile('divMargin','divMarginM');sched()">
+              <div class="spin-btns"><button class="spin-btn" onclick="adjM('divMargin','divMarginM',1)">▲</button><button class="spin-btn" onclick="adjM('divMargin','divMarginM',-1)">▼</button></div>
+            </div>
+            <span class="spin-unit">mm</span>
+          </div>
+          <div class="spin-wrap">
+            <span class="spin-label">Max W</span>
+            <div class="spin-ctrl">
+              <input type="number" id="divWM" value="1200" min="100" max="4000" step="10" oninput="syncMobile('divW','divWM');sched()">
+              <div class="spin-btns"><button class="spin-btn" onclick="adjM('divW','divWM',100)">▲</button><button class="spin-btn" onclick="adjM('divW','divWM',-100)">▼</button></div>
+            </div>
+            <span class="spin-unit">mm</span>
+          </div>
+          <div class="spin-wrap">
+            <span class="spin-label">Max H</span>
+            <div class="spin-ctrl">
+              <input type="number" id="divHM" value="2400" min="100" max="4000" step="10" oninput="syncMobile('divH','divHM');sched()">
+              <div class="spin-btns"><button class="spin-btn" onclick="adjM('divH','divHM',100)">▲</button><button class="spin-btn" onclick="adjM('divH','divHM',-100)">▼</button></div>
+            </div>
+            <span class="spin-unit">mm</span>
+          </div>
+          <div class="div-result" id="divResultM">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 모바일 하단 버튼바 ══ -->
+<div class="mobile-action-bar" id="mobileActionBar">
+  <button class="mob-btn settings" onclick="document.getElementById('mobilePanel').classList.toggle('show')" title="설정">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+  </button>
+  <button class="mob-btn pri" id="btnDXFM" onclick="exportDXF()" disabled>DXF</button>
+  <button class="mob-btn" id="btnSVGM" onclick="exportSVG()" disabled>SVG</button>
+  <button class="mob-btn" id="btnPDFM" onclick="exportPDF()" disabled>PDF</button>
+  <button class="mob-btn" id="btnJPGM" onclick="exportJPG()" disabled>IMG</button>
+</div>
+
 
 <script>
 
@@ -714,6 +1067,8 @@ function updateDivResult(pwPanels,phPanels,snapMode){
     '가로 '+pwPanels.length+'분할: ['+pwPanels.join(', ')+'mm]<br>'+
     '세로 '+phPanels.length+'분할: ['+phPanels.join(', ')+'mm]<br>'+
     '총 <strong>'+(pwPanels.length*phPanels.length)+'장</strong>';
+
+  var drm=document.getElementById('divResultM');if(drm)drm.innerHTML=document.getElementById('divResult').innerHTML;
 }
 
 function drawDivLines(ctx,pwPanels,phPanels,ppm,RW,RH,margin){
@@ -773,6 +1128,24 @@ document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('fi').addEventListener('change',function(e){if(e.target.files[0])loadImg(e.target.files[0]);});
   initZoom();
   loadPwFile();
+
+// ── 모바일 패널 외부 터치 시 닫기
+document.addEventListener('touchstart', function(e) {
+  var panel = document.getElementById('mobilePanel');
+  if (!panel || !panel.classList.contains('show')) return;
+  var settingsBtn = document.querySelector('.mob-btn.settings');
+  if (panel.contains(e.target)) return;
+  if (settingsBtn && settingsBtn.contains(e.target)) return;
+  panel.classList.remove('show');
+}, { passive: true });
+document.addEventListener('mousedown', function(e) {
+  var panel = document.getElementById('mobilePanel');
+  if (!panel || !panel.classList.contains('show')) return;
+  var settingsBtn = document.querySelector('.mob-btn.settings');
+  if (panel.contains(e.target)) return;
+  if (settingsBtn && settingsBtn.contains(e.target)) return;
+  panel.classList.remove('show');
+});
 });
 
 var gridLayout='square',holeShape='circle',quality='fast',currentView='split',unit='mm';
@@ -785,12 +1158,16 @@ function setLayout(l){
   ['Sq','Hex'].forEach(function(x){document.getElementById('layout'+x).classList.remove('on')});
   document.getElementById('layout'+(l==='square'?'Sq':'Hex')).classList.add('on');
   sched();
+
+  syncLayoutUI(l);
 }
 function setShape(s){
   holeShape=s;
   ['Circle','Square'].forEach(function(x){document.getElementById('shape'+x).classList.remove('on')});
   document.getElementById('shape'+(s==='circle'?'Circle':'Square')).classList.add('on');
   sched();
+
+  syncShapeUI(s);
 }
 function setUnit(u){unit=u;['MM','Inch'].forEach(function(x){document.getElementById('unit'+x).classList.remove('on')});document.getElementById('unit'+(u==='mm'?'MM':'Inch')).classList.add('on');}
 function setQ(q){quality=q;['Fast','Med','Full'].forEach(function(x){document.getElementById('q'+x).classList.remove('on')});document.getElementById('q'+q[0].toUpperCase()+q.slice(1)).classList.add('on');sched();}
@@ -804,8 +1181,27 @@ function setView(v){
 function onSizeChange(ax,val){
   var n=parseFloat(val);if(isNaN(n)||n<1)return;
   n=Math.max(1,Math.min(9999,Math.round(n)));
-  if(ax==='w'){document.getElementById('pwR').value=n;if(state.aspect&&imgData){document.getElementById('phR').value=Math.max(1,Math.round(n*(imgData.height/imgData.width)));}}
-  else{document.getElementById('phR').value=n;if(state.aspect&&imgData){document.getElementById('pwR').value=Math.max(1,Math.round(n*(imgData.width/imgData.height)));}}
+  if(ax==='w'){
+    document.getElementById('pwR').value=n;
+    var pwRM=document.getElementById('pwRM');
+    if(pwRM)pwRM.value=n;
+    if(state.aspect&&imgData){
+      var nh=Math.max(1,Math.round(n*(imgData.height/imgData.width)));
+      document.getElementById('phR').value=nh;
+      var phRM=document.getElementById('phRM');
+      if(phRM)phRM.value=nh; // 즉시 동기화
+    }
+  } else {
+    document.getElementById('phR').value=n;
+    var phRM2=document.getElementById('phRM');
+    if(phRM2)phRM2.value=n;
+    if(state.aspect&&imgData){
+      var nw=Math.max(1,Math.round(n*(imgData.width/imgData.height)));
+      document.getElementById('pwR').value=nw;
+      var pwRM2=document.getElementById('pwRM');
+      if(pwRM2)pwRM2.value=nw; // 즉시 동기화
+    }
+  }
   sched();
 }
 
@@ -824,14 +1220,15 @@ function loadImg(file){
       document.getElementById('phR').value=autoH;
       document.getElementById('dzTxt').innerHTML='<strong style="color:var(--text);font-size:11px">'+file.name+'</strong><br><span style="font-size:9px;opacity:.5">'+img.width+'×'+img.height+'px → '+autoW+'×'+autoH+'mm</span>';
       ['btnDXF','btnSVG','btnPDF','btnJPG'].forEach(function(id){document.getElementById(id).disabled=false;});
+      ['btnDXFM','btnSVGM','btnPDFM','btnJPGM'].forEach(function(id){var el=document.getElementById(id);if(el)el.disabled=false;});
+      syncToMobile('pwR','pwRM');syncToMobile('phR','phRM');
+      var dzm=document.getElementById('dzTxtM');if(dzm)dzm.textContent=file.name;
       sched();
     };
     img.src=ev.target.result;
   };
   reader.readAsDataURL(file);
 }
-
-
 
 function getLum(nx,ny){
   if(!imgData)return 0;
@@ -922,6 +1319,8 @@ function _render2D(){
   else{document.getElementById('iMn').textContent='—';document.getElementById('iMx').textContent='—';}
   document.getElementById('warnBar').style.display=total>80000?'flex':'none';
   syncView();
+
+  if(typeof syncStats==='function')syncStats();
 }
 
 function drawHole(ctx,cx,cy,r){
@@ -930,23 +1329,12 @@ function drawHole(ctx,cx,cy,r){
   else{ctx.fillRect(cx-r,cy-r,r*2,r*2);}
 }
 
-
-
 function syncView(){
   if(!offCanvas)return;
   var id=currentView==='split'?'outC':currentView==='full'?'fullC':null;
   if(!id)return;
   var c=document.getElementById(id);c.width=offCanvas.width;c.height=offCanvas.height;c.getContext('2d').drawImage(offCanvas,0,0);
 }
-
-
-
-
-
-
-
-
-
 
 function collectHoles(){
   var pw=+document.getElementById('pwR').value;
@@ -1421,9 +1809,137 @@ function exportJPG(){
   var a=document.createElement('a');a.href=offCanvas.toDataURL('image/jpeg',.96);a.download='nspace_'+pw+'x'+ph+'.jpg';a.click();
 }
 
+// ══════════════════════════════════════
+// 모바일 설정 패널
+// ══════════════════════════════════════
+
+function syncLayoutUI(l){
+  var isSq=l==='square';
+  ['Sq','Hex'].forEach(function(x){
+    var el=document.getElementById('layout'+x+'M');
+    if(el)el.classList.toggle('on',isSq===(x==='Sq'));
+  });
+}
+function syncShapeUI(s){
+  var isCirc=s==='circle';
+  ['Circle','Square'].forEach(function(x){
+    var el=document.getElementById('shape'+x+'M');
+    if(el)el.classList.toggle('on',isCirc===(x==='Circle'));
+  });
+}
+function syncStats(){
+  ['iH','iO','iMn','iMx','iR'].forEach(function(id){
+    var s=document.getElementById(id),d=document.getElementById(id+'M');
+    if(s&&d)d.textContent=s.textContent;
+  });
+  var dr=document.getElementById('divResult'),drm=document.getElementById('divResultM');
+  if(dr&&drm)drm.innerHTML=dr.innerHTML;
+  ['DXF','SVG','PDF','JPG'].forEach(function(n){
+    var s=document.getElementById('btn'+n),d=document.getElementById('btn'+n+'M');
+    if(s&&d)d.disabled=s.disabled;
+  });
+}
+function setMobTab(tab){
+  var tabs=['panel','hole','image','div'];
+  var ids={panel:'mobPanel',hole:'mobHole',image:'mobImage',div:'mobDiv'};
+  document.querySelectorAll('.mob-tab').forEach(function(el,i){
+    el.classList.toggle('on',tabs[i]===tab);
+  });
+  document.querySelectorAll('.mob-panel').forEach(function(el){
+    el.classList.remove('active');
+  });
+  var t=document.getElementById(ids[tab]);
+  if(t)t.classList.add('active');
+}
+
+function toggleDivM(){
+  useDiv=!useDiv;
+  ['togDiv','togDivM'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.classList.toggle('on',useDiv);
+  });
+  ['divSettings','divSettingsM'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.style.display=useDiv?'block':'none';
+  });
+  sched();
+}
+function toggleSnapM(){
+  var m=document.getElementById('togSnapM'),d=document.getElementById('togSnap');
+  if(!m)return;m.classList.toggle('on');
+  if(d)d.classList.toggle('on',m.classList.contains('on'));sched();
+}
+function toggleAspectM(){
+  toggle('aspect');
+  var m=document.getElementById('togAspectM'),d=document.getElementById('togAspect');
+  if(m)m.classList.toggle('on',state.aspect);
+  if(d)d.classList.toggle('on',state.aspect);
+}
+
+// 모바일 입력 동기화
+
+// 모바일 입력 동기화
+function syncMobile(desktopId,mobileId){
+  var dEl=document.getElementById(desktopId);
+  var mEl=document.getElementById(mobileId);
+  if(!dEl||!mEl)return;
+  dEl.value=mEl.value;
+}
+function syncToMobile(desktopId,mobileId){
+  var dEl=document.getElementById(desktopId);
+  var mEl=document.getElementById(mobileId);
+  if(!dEl||!mEl)return;
+  mEl.value=dEl.value;
+}
+function adjM(desktopId,mobileId,delta){
+  var el=document.getElementById(desktopId);
+  if(!el)return;
+  var v=parseFloat(el.value)||0;
+  var mn=parseFloat(el.min)||0,mx=parseFloat(el.max)||9999;
+  el.value=Math.max(mn,Math.min(mx,Math.round((v+delta)*100)/100));
+  syncToMobile(desktopId,mobileId);
+  sched();
+}
+function adjSzM(ax,delta){
+  adjSz(ax,delta);
+  syncToMobile(ax==='w'?'pwR':'phR', ax==='w'?'pwRM':'phRM');
+}
+function setQM(q){
+  setQ(q);
+  ['Fast','Med','Full'].forEach(function(x){
+    var el=document.getElementById('q'+x+'M');
+    if(el)el.classList.toggle('on',x.toLowerCase()===q);
+  });
+}
+
+// 통계 모바일 동기화
 
 
+// 레이아웃 버튼 모바일 동기화
+var _origSetLayout=setLayout;
+setLayout=function(l){
+  _origSetLayout(l);
+  ['Sq','Hex'].forEach(function(x){
+    var el=document.getElementById('layout'+x+'M');
+    if(el)el.classList.toggle('on',x.toLowerCase()===(l==='square'?'sq':'hex'));
+  });
+};
+var _origSetShape=setShape;
+setShape=function(s){
+  _origSetShape(s);
+  ['Circle','Square'].forEach(function(x){
+    var el=document.getElementById('shape'+x+'M');
+    if(el)el.classList.toggle('on',x.toLowerCase()===s);
+  });
+};
 
+// _render2D 후 통계 동기화
+var _origRender=_render2D;
+_render2D=function(){
+  _origRender();
+  syncStats();
+};
+
+// 이미지 로드 시 모바일 드롭존도 업데이트
+var _origLoadImg=loadImg;
 
 function showOverlay(t){document.getElementById('overlayTxt').textContent=t||'처리 중...';document.getElementById('overlay').classList.add('show');}
 function hideOverlay(){document.getElementById('overlay').classList.remove('show');}
