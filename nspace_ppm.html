@@ -23,7 +23,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:0 1
 .logo-wrap{display:flex;align-items:center;gap:.75rem}
 .logo-img{height:26px;width:auto;filter:brightness(0) invert(1)}
 .logo-divider{width:1px;height:18px;background:rgba(255,255,255,0.25)}
-.logo-text{font-family:var(--mono);font-size:16.5px;letter-spacing:.12em;color:rgba(255,255,255,0.85);text-transform:uppercase}
+.logo-text{font-family:var(--mono);font-size:15px;letter-spacing:.12em;color:rgba(255,255,255,0.85);text-transform:uppercase}
 .hbadge{font-family:var(--mono);font-size:9px;padding:.2rem .55rem;border:1px solid rgba(255,255,255,0.25);border-radius:3px;color:rgba(255,255,255,0.65);letter-spacing:.1em}
 
 /* LAYOUT */
@@ -208,7 +208,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
   }
-  .vtab { padding: .45rem .75rem; font-size: 15px; }
+  .vtab { padding: .45rem .75rem; font-size: 13px; }
   .zoom-reset-btn { display: none; }
 
   /* 분할뷰 — 상하 배치 */
@@ -751,7 +751,7 @@ input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
   <button class="mob-btn settings" onclick="document.getElementById('mobilePanel').classList.toggle('show')" title="설정">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
   </button>
-  <button class="mob-btn pri" id="btnDXFM" onclick="exportDXF()" disabled>DXF</button>
+  <button class="mob-btn" id="btnDXFM" onclick="exportDXF()" disabled>DXF</button>
   <button class="mob-btn" id="btnSVGM" onclick="exportSVG()" disabled>SVG</button>
   <button class="mob-btn" id="btnPDFM" onclick="exportPDF()" disabled>PDF</button>
   <button class="mob-btn" id="btnJPGM" onclick="exportJPG()" disabled>JPG</button>
