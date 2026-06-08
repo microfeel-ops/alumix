@@ -12,3 +12,4 @@ min001
 eunmin001
 kukbo001
 dooyang001
+vicc001
