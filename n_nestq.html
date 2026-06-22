@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NestQ by N-SPACE — 패널 네스팅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              slate: {
+                50:'#F2F4F7',100:'#EAEDF0',200:'#E0E3E7',300:'#C6CBD1',
+                400:'#A2A9B2',500:'#77828D',600:'#5B677E',700:'#404D6F',
+                800:'#30343A',900:'#1C2B5C'
+              },
+              blue: {
+                50:'#EAF2FF',100:'#DEE5FF',200:'#BACFFF',300:'#95B9FF',
+                400:'#70A2FF',500:'#4C8DFF',600:'#3D7AE9',700:'#3063C5',
+                800:'#254B9D',900:'#1C387B'
+              },
+              emerald: {
+                50:'#EBF7F2',100:'#D7F0E6',200:'#AEE0CD',300:'#86D1B4',
+                400:'#5EC19B',500:'#2EAF7D',600:'#2E9A70',700:'#2E8160',
+                800:'#2E6850',900:'#2E5142'
+              },
+              red: {
+                50:'#FDF2F1',100:'#FAE4E3',200:'#F4C5C2',300:'#EEA59F',
+                400:'#E78078',500:'#E05A4F',600:'#C9544A',700:'#A84D45',
+                800:'#85453F',900:'#633E39'
+              },
+              amber: {
+                50:'#FFFBEB',100:'#FEF3C7',200:'#FDE4A0',300:'#FBD477',
+                400:'#FBC850',500:'#FBBF24',600:'#D9A30F',700:'#B17F0A',
+                800:'#8A6107',900:'#634502'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background-color: #f2f4f7; }
+        canvas { cursor: grab; touch-action: none; }
+        canvas:active { cursor: grabbing; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f2f4f7; }
+        ::-webkit-scrollbar-thumb { background: #e0e3e7; border-radius: 4px; }
+        .logo-wrap{display:flex;align-items:center;gap:.75rem}
+        .logo-img{height:28px;width:auto;filter:brightness(0) invert(1)}
+        .logo-divider{width:1px;height:18px;background:rgba(255,255,255,.25)}
+        .logo-title{display:flex;align-items:baseline;gap:.5rem}
+        .logo-title .app-name{font-weight:800;font-size:16px;color:#fff;letter-spacing:.02em}
+        .logo-title .app-by{font-size:11px;color:rgba(255,255,255,.6);font-weight:500}
+        .ver-badge{font-size:9px;padding:.2rem .55rem;border:1px solid rgba(255,255,255,.25);border-radius:3px;color:rgba(255,255,255,.65);letter-spacing:.1em;font-family:monospace}
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-700 bg-slate-100 overflow-x-hidden box-border">
+
+    <!-- 상단 헤더 -->
+    <header class="flex items-center justify-between flex-shrink-0 px-4 lg:px-6" style="height:54px;background:#1C2B5C;box-shadow:0 2px 8px rgba(0,0,0,.25)">
+        <div class="logo-wrap">
+            <img class="logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHwAAACsCAYAAAC5IMiRAAAKN2lDQ1BzUkdCIElFQzYxOTY2LTIuMQAAeJydlndUU9kWh8+9N71QkhCKlNBraFICSA29SJEuKjEJEErAkAAiNkRUcERRkaYIMijggKNDkbEiioUBUbHrBBlE1HFwFBuWSWStGd+8ee/Nm98f935rn73P3Wfvfda6AJD8gwXCTFgJgAyhWBTh58WIjYtnYAcBDPAAA2wA4HCzs0IW+EYCmQJ82IxsmRP4F726DiD5+yrTP4zBAP+flLlZIjEAUJiM5/L42VwZF8k4PVecJbdPyZi2NE3OMErOIlmCMlaTc/IsW3z2mWUPOfMyhDwZy3PO4mXw5Nwn4405Er6MkWAZF+cI+LkyviZjg3RJhkDGb+SxGXxONgAoktwu5nNTZGwtY5IoMoIt43kA4EjJX/DSL1jMzxPLD8XOzFouEiSniBkmXFOGjZMTi+HPz03ni8XMMA43jSPiMdiZGVkc4XIAZs/8WRR5bRmyIjvYODk4MG0tbb4o1H9d/JuS93aWXoR/7hlEH/jD9ld+mQ0AsKZltdn6h21pFQBd6wFQu/2HzWAvAIqyvnUOfXEeunxeUsTiLGcrq9zcXEsBn2spL+jv+p8Of0NffM9Svt3v5WF485M4knQxQ143bmZ6pkTEyM7icPkM5p+H+B8H/nUeFhH8JL6IL5RFRMumTCBMlrVbyBOIBZlChkD4n5r4D8P+pNm5lona+BHQllgCpSEaQH4eACgqESAJe2Qr0O99C8ZHA/nNi9GZmJ37z4L+fVe4TP7IFiR/jmNHRDK4ElHO7Jr8WgI0IABFQAPqQBvoAxPABLbAEbgAD+ADAkEoiARxYDHgghSQAUQgFxSAtaAYlIKtYCeoBnWgETSDNnAYdIFj4DQ4By6By2AE3AFSMA6egCnwCsxAEISFyBAVUod0IEPIHLKFWJAb5AMFQxFQHJQIJUNCSAIVQOugUqgcqobqoWboW+godBq6AA1Dt6BRaBL6FXoHIzAJpsFasBFsBbNgTzgIjoQXwcnwMjgfLoK3wJVwA3wQ7oRPw5fgEVgKP4GnEYAQETqiizARFsJGQpF4JAkRIauQEqQCaUDakB6kH7mKSJGnyFsUBkVFMVBMlAvKHxWF4qKWoVahNqOqUQdQnag+1FXUKGoK9RFNRmuizdHO6AB0LDoZnYsuRlegm9Ad6LPoEfQ4+hUGg6FjjDGOGH9MHCYVswKzGbMb0445hRnGjGGmsVisOtYc64oNxXKwYmwxtgp7EHsSewU7jn2DI+J0cLY4X1w8TogrxFXgWnAncFdwE7gZvBLeEO+MD8Xz8MvxZfhGfA9+CD+OnyEoE4wJroRIQiphLaGS0EY4S7hLeEEkEvWITsRwooC4hlhJPEQ8TxwlviVRSGYkNimBJCFtIe0nnSLdIr0gk8lGZA9yPFlM3kJuJp8h3ye/UaAqWCoEKPAUVivUKHQqXFF4pohXNFT0VFysmK9YoXhEcUjxqRJeyUiJrcRRWqVUo3RU6YbStDJV2UY5VDlDebNyi/IF5UcULMWI4kPhUYoo+yhnKGNUhKpPZVO51HXURupZ6jgNQzOmBdBSaaW0b2iDtCkVioqdSrRKnkqNynEVKR2hG9ED6On0Mvph+nX6O1UtVU9Vvuom1TbVK6qv1eaoeajx1UrU2tVG1N6pM9R91NPUt6l3qd/TQGmYaYRr5Grs0Tir8XQObY7LHO6ckjmH59zWhDXNNCM0V2ju0xzQnNbS1vLTytKq0jqj9VSbru2hnaq9Q/uE9qQOVcdNR6CzQ+ekzmOGCsOTkc6oZPQxpnQ1df11Jbr1uoO6M3rGelF6hXrtevf0Cfos/ST9Hfq9+lMGOgYhBgUGrQa3DfGGLMMUw12G/YavjYyNYow2GHUZPTJWMw4wzjduNb5rQjZxN1lm0mByzRRjyjJNM91tetkMNrM3SzGrMRsyh80dzAXmu82HLdAWThZCiwaLG0wS05OZw2xljlrSLYMtCy27LJ9ZGVjFW22z6rf6aG1vnW7daH3HhmITaFNo02Pzq62ZLde2xvbaXPJc37mr53bPfW5nbse322N3055qH2K/wb7X/oODo4PIoc1h0tHAMdGx1vEGi8YKY21mnXdCO3k5rXY65vTW2cFZ7HzY+RcXpkuaS4vLo3nG8/jzGueNueq5clzrXaVuDLdEt71uUnddd457g/sDD30PnkeTx4SnqWeq50HPZ17WXiKvDq/XbGf2SvYpb8Tbz7vEe9CH4hPlU+1z31fPN9m31XfKz95vhd8pf7R/kP82/xsBWgHcgOaAqUDHwJWBfUGkoAVB1UEPgs2CRcE9IXBIYMj2kLvzDecL53eFgtCA0O2h98KMw5aFfR+OCQ8Lrwl/GGETURDRv4C6YMmClgWvIr0iyyLvRJlESaJ6oxWjE6Kbo1/HeMeUx0hjrWJXxl6K04gTxHXHY+Oj45vipxf6LNy5cDzBPqE44foi40V5iy4s1licvvj4EsUlnCVHEtGJMYktie85oZwGzvTSgKW1S6e4bO4u7hOeB28Hb5Lvyi/nTyS5JpUnPUp2Td6ePJninlKR8lTAFlQLnqf6p9alvk4LTduf9ik9Jr09A5eRmHFUSBGmCfsytTPzMoezzLOKs6TLnJftXDYlChI1ZUPZi7K7xTTZz9SAxESyXjKa45ZTk/MmNzr3SJ5ynjBvYLnZ8k3LJ/J9879egVrBXdFboFuwtmB0pefK+lXQqqWrelfrry5aPb7Gb82BtYS1aWt/KLQuLC98uS5mXU+RVtGaorH1futbixWKRcU3NrhsqNuI2ijYOLhp7qaqTR9LeCUXS61LK0rfb+ZuvviVzVeVX33akrRlsMyhbM9WzFbh1uvb3LcdKFcuzy8f2x6yvXMHY0fJjpc7l+y8UGFXUbeLsEuyS1oZXNldZVC1tep9dUr1SI1XTXutZu2m2te7ebuv7PHY01anVVda926vYO/Ner/6zgajhop9mH05+x42Rjf2f836urlJo6m06cN+4X7pgYgDfc2Ozc0tmi1lrXCrpHXyYMLBy994f9Pdxmyrb6e3lx4ChySHHn+b+O31w0GHe4+wjrR9Z/hdbQe1o6QT6lzeOdWV0iXtjusePhp4tLfHpafje8vv9x/TPVZzXOV42QnCiaITn07mn5w+lXXq6enk02O9S3rvnIk9c60vvG/wbNDZ8+d8z53p9+w/ed71/LELzheOXmRd7LrkcKlzwH6g4wf7HzoGHQY7hxyHui87Xe4Znjd84or7ldNXva+euxZw7dLI/JHh61HXb95IuCG9ybv56Fb6ree3c27P3FlzF3235J7SvYr7mvcbfjT9sV3qID0+6j068GDBgztj3LEnP2X/9H686CH5YcWEzkTzI9tHxyZ9Jy8/Xvh4/EnWk5mnxT8r/1z7zOTZd794/DIwFTs1/lz0/NOvm1+ov9j/0u5l73TY9P1XGa9mXpe8UX9z4C3rbf+7mHcTM7nvse8rP5h+6PkY9PHup4xPn34D94Tz+49wZioAAAAJcEhZcwAALiMAAC4jAXilP3YAABDASURBVHic7ZsJdBRFGserunsySQhRwyEKOTyeJnguRNcDFY/1YtcDhVERL/DkiAlh1nNZ0GUlJ5erIqICKiOi67keb1lWfZ4EVBBBEQPZVVQIGgIGMtO1/2om7EzPPUxIpL4fr1M91dXVX9W/vrq6MYQQLBk0bZAzr7DLdYJpl3MmjhCc9eCMpZmm0DhIKlOAO70wqSXZ+zsLnHFNMJG5h9lIcbw4tuLkvwjfbt3JHvlurWdFshkaid6QWzjkHE3TKnMLs44TslywSfhNk+EeaG0BsaVNWXuUSSfAXyt7iqxMB44cnOQgPCYtjY3K7+vagisLGr5oLjXNV3ckkmHcgucXXXkC00wPxD4kQaOJ1HMA2tOtcLqRBX1dj1zv6lsyYcIEM54bYwo+ceJE7XHPFwsZF4NT02iJFOKAJKPneL64+rGnr7xgw5pnPoh1Q1TBex85qIduZC1Hd9I7dTYSqUfsz3XxXl7RFXdu+GLBlGgpIwqef4TrcIej6yeY1HVJvYFEO4Dpk3gAXXyf+lWeMZEShRX8oMOHHYjJAYn9K0R28QVHuVrqP/eMD3c9RHA5Zjudvs8wWyaxf6VAu/LcQtfnDas9T9ivhQj++LOrXsUNPfeKZUS7oWni0ZxDBy9pXPd8fWB8kOAFRw49V+j8/L1qGdFOcCM7w/EaTvoGxgYJLnRtHqO11z4DeuqigkKXq361x9MWt1vwvCLXcM6pK9/XMHVWjSBUcIg9qUMsItoVLljvgmNcA+pXeN6Vvy3B8wtdvZnGCjrUMqLdEF42EcHZ8twSnOvs9iRfmhG/BjR2ctupJTjEppn5voxgGQUFQw6tr1+4rm0ML+hIe4j2x5fBL0ZQ2yY47art4+icnyBDQ9NOzcgt7LNnXy0QnR/Oe8nAyMs7+CCar+37QOOuMjS4U0snwRVACGv4TvibNuLXDQmuGCS4YpDgikGCKwYJrhgkuGKQ4IpBgisGCa4YJLhikOCKQYIrBgmuGEarjzXrekebEYAQ75mczetoM/YUTWg9GBed6dPvL+Ufw+TeFr0TObpgfHXDKs/DHW3HniL/uzWqtfMILth3Mug8ShN7BRJcMUhwxSDBFYMEVwwSXDFIcMUgwRWDBFcMElwxSHDFIMEVgwRXDBJcMUhwxSDBFYMEVwwSXDFIcMUgwRWDBFcMElwxSHDFIMEVgwRXDBJcMUhwxSDBFYMEVwwSXDFIcMUgwRWDBFcMElwxSHDFIMEVgwRXDBJcMUhwxSDBFYMEVwwSXDFIcMUgwRWDBFcMElwxSHDFIMEVgwRXDBJcMUhwxSDBFYMEVwwSXDFIcMUgwRWDBFcMElwxSHDFIMEVgwRXDBJcMUhwxSDBFYMEVwwSXDFIcMUgwRWDBFcMElwxSHDFIMEVgwRXDBJcMUhwxSDBFYMEVwwSXDFIcMUgwRWDBFcMElwxSHDFIMEVgwRXDBJcMUhwxSDBFYMEVwwSXDFIcMUgwRWDBFcMElwxSHDFIMEVgwRXDGOjb0tTrqPHTpyndbQxfjZ3tAEpYQdrhDuZONM62pRdiE3yr2GuW9ySX+R6iHFW0tEmMcGaRKt3dkebkQrWr/c05hcNfZJxfn1H2yKY2Cx8rU/Kc6tLb1izsCy38PJPBeOncsb0DrKr0eRsVsPaRV920PNTTsOaTTf1Kez+IWP8hI6qVyHYj17GH/r2yxca5G9LcBMgeNx/ECnCNBd7ETziPzoFNGlTDBJcMUhwxSDBFYMEVwwSXDFIcMUgwRUjbsFvueUWx6xZs7ymaYr2NGhfQdM0PnDgQH3xYmvzpdMQVvDS0tIDHbpjmODiTM74cYjqkd01O718XLlwj3d/j99rBRN1Qog3GxsbF8+ZM6cl3geWlZUV6Lp+Kxc8oZc1sKWZm/w7H/N9VFtbu8y/Oxg35eXlp2hMu4ztepmxA/k9VFlZuT6RPKIxfvz4QpTpCsbZGfjZF3XVAyFHfe1A+DXqaznq62XU14vx1leydRWGn7a3bK+eOXNmc5Dgo0ePzsrIyLjXYThux880iG2/UUb0kgeuDeCcl3Tv1r0RhZ2HuNp4KtDQjIkIrgnNOjqWLZrckNYZKnMtnvlnPO+peO4dOXJk15wDcl7CabeA6BNxnJWYFaFYQjNehWNQhDI5cfTF9b6or2HdunX7HvdMqaurmxHL+yH2JNw3PNG6Cgd0bUQwY7fg0qsz0zNfw2m/BPPKgVElKMwod7l7elNz06SHH3745yjpuyRjsI3D8cz5eN6ZVTVVN8YaZnL2z7mNBYstG9CZqPjT0WjeTtYI9zj3CK7xmThNj/cePPdABDX9+/e/oqSk5LJp06b9J0raVNTVrrwEz5KhJbjL5dLzc/MX4gmJir0bdFcG7i9D1z9k3Lhxw6urq/+dKmMjwtkIPGstzh6IlARzj0zYVBbh8p9wnJPMo9HY7kSPMzmZeyUQ80RnmvMD91j3aRXTK75JNp9EsQTPzc0dBgtOi5BGes+31rtqLpwwtA+L/rFErq7p8u1QYYptDQvsuWfMmDGPzpgxI+yHE9lZ2bcg6Bnh3rPh5QPg5e8m8kyIfTVujia27Kp/wNGEQ47l3SKk640O/3UMOcWzZ8/emogNiQLtvpKhJTgmM8PCpGmCyBN2tO54Ct3Oj22RcraenZHdTxjiIlTYDWzXmB6cOROvJGQME5O4j/8rahpddEe3dBUq+lLbpS7p6ekXIpxnvwfen4HGVx7j8dLLz43XVgx9eYZhPBRmfiML8jmOyU3bml4NHNb847ysqzEstPs/AkPOFIS3xWWAYBOZyZbEa6/E1MwtVVVVn8rzXWM4Z0UhiYR5AxItssejIK0IPpQHxqBJTodzFFrPRBQoy59k5ebNm+9JxCAMB6sqaypjFgJLnUWYsMl0p9suHR0h/UgEB0XLE3b/Ts7gUdb34rEVq5f7EGSFufQknONmOMcO+wX0IKsRuN23u+cyB5POkG8zok88z7YQbFVFTcWSuNPbMPyZpNsbrCa0qBUl8ReuBp70d1TuPFTeEejMhiWyTEsEOTnDMkc2Nrvg2fa0aIxOjJHuMNnIISqotBrXpJefH+v5WMX0yszIvDLMpZerqqtuiLVUrJhasRLefiHqqY61ebpgL/iEb2SsZ6eKtln6KhxnBF3R2AxUrgvd7RtY/67wCu96r9f7Q3Nzc6NdUEzQ1iE4VW427IWNmVx7BLr6Lfa4tLQ0+S2Z3XNaUZ475TLKFn8evPwkePkH0R6MoUMOJw5b9Lbtv2y/Kd59AXj7KoheAhtKYUttZVXlrHjuSxWW4OiS58OAM8JcHyDX23L9a8h/usHSnekMDaEFLXMj/ERuwHyKBvH60uVLl6DMSe0qoTfJLCsr2z/SdSz5NJ/P183hcFwKbxyKISDousnM5YG/rXlG1+w7QjISbG51TbXskYb7N5T+b8MuL78wqp1cs/csMs9FM2fO3BjtPjsQXYqcnNAaq0X9T4xwFd4mZiP/2ki3W4LX1dU9Udyv+JooM3U7cggoQFiAijsHRowr7l/8Ndalf6qorng6sRIwWYg5aE5zoiXB5MsK7WKDrWhobwVGZHfJvobZx0nGfOg6J8seCN58HxrRc7brF6AhnIje6qNINqAyi+yTNTjLm9HsbgcO9h9hkXsiCKILLnd84GEX6br+nFyqJGnIYRDuKSxZzlu6bOmIvbWHDBGqampqfmr7fdZZZxlofHeGSTrXP/QwpH8ek7/PcHpsYAI0Kunlv4/0LP+mSXCcj69L2vj2IerXsbt32mSlYQw+F8JfjdZ/Mwp3MmNJbOpxdk3//v3lf2y4MeF7E0Qu/zZs2PCXwLh+/fpdxWTjC8bnM327181+L5+ELtru5YPg5cVoGEsjPDJ0/0GwbUmY3p5EnUMF7aX7Jx5z5YGC56AB/BZd6FGomENQuXIC1BMTpF4QVY63+7EIDQKNZSQqdAEmQf9MUSHstKJY07Y2b73L4/H42iKtHcO8/LvCpP8GjfgS2LQ7AvMG2Ttvx2lmYEKU+V4EF0d4rhQ3JyiG2363P3JZ7ItwTY7hz0a7OeLrUbRyudn+D/8RgnzRkpmWeaLQxUjUXMhSRWPaKARxCQ4j16EhNcZI9gsq93tTmB9CvIWY3Ya8qMnLyxuK4Mgw9x6ORlsZFBOh70JZLkIv1w893rIwdjbgevAqQWPH4++SGLanDpNdjXlSVFGjkfQHEPJVG4LF8sAyYzUqInjmyNnAePNCL3IXBPQka4sEnqmVl5XfnYo3S5jLSC+37+jJxvAJglMC4zBpk2P+1ETyLykp6eFMc77Pdg01w6NNFFONJbjlremZU2F8/datW6f4d9PiBoItgNfZlwoHyM2PcDtP7QGGoMEIjkpFXhD2Enj58fDyT4IumOxNePRttrRn49mnQbR34s0fYsvexppnYKL4Lia67oqqioQaTbJYgmdkZFQjGCEHteys7ItR2BtDChudY8LEeTdu3LhXZupywwez7rtTmaehG9LLLwuM27Rl0xvdu3WXL0WCXsboXJ+LOjsFdfZdrHwxj7gVw8u1AVEOVHutu9T9fkVtxYcpMT4KBlrnuWhlN+2O4azYYTjqsLifh+6mEi3382gZSE9A5UwPc2lF4ISqPSkvLb8IwfEhF0zmFpqI+RYKDV32DKNt0YMhwrEQ4bO2CLnDiOGrGumn2DIoQB28g7oYGm7sl2BCmZafm3+Xf4PHzk/CEF/HsjMVGBD7fnskumj5GdC1uHYtuhu5RHnFZObH6Lbrcb6Ne/l+pm4W4fcfUNArWLi1n8meaW/jJZZ3l5WHe1nzIiY3lWHiQ/DvzA3C6SFBFwwmvXxIYNTOnTunoUuWbxeD1vDgMDjKx2gQL3GTv4KGtgaLnp9RRz0xgT0FE8rrkObQcM+X272VlZWb4rEV+ZbCGYfEThnykG99wneHgYe9hRZ7QsSE8Hj8LdYC/1+7Yc3Co2W/umlb04MJG5UE8KoL/DYG4fV5J8Wbh5yzQKj7UQ+P2S5d5r7dfbR86dEWIeckpaWlQyGufLsWtCSTjiLHf1TNJXJ4bNsdlIR9ncossZ9BL/oIBI/LVuRzUpzFst8oH7bEwIPudo9zr0DEdBw9ksosmB+Yl7lQidtTkFdM0EWGeLfckInUtUairq5ubnH/YrmGD9y04RhhpZe7AtPW1tauQXd/Phq+XLJG+rghNoIt2tm68/q99SWwznSnNWlD17dg1KhRb2RmZt6LFiS/EMlIMs/lKIBr6tSpX6XOzMjAu0/FkHKyPR4VeF+iecmtYEyo7kcDsv8f+SF4zh/RgOoDIzG2fyz33uHF8/EzxIZooJv3msKcsKFhw5S9Nc9pY/c6/MEHH5SvGMvQXU0xDGMEzodCfDlOxbOyXYkC/K2hoWFWrAJg6bcU+QbOflvQFa6MeEMUMH7LvQC57HMGRD+X7Lp22bJl8+HlY3H6m4DoJq/XuzNcerk3DxsG+Lejy1GucKuVQGSv58FwMxn3ro1pkGBLUfuD4y5AdFqYj60M2XhBdyW/O5f7zpPHjh17sNPpPIkLaxabi4cfwOQyQjA5890E8VbwVv5R4BgXCwwhD8CTnoLIlkgtLS2b/Y0tYeRnO/Ay+ebIGkv1Vt1XNbNqfUVlRTLZWV6O2fRJvXr1ykWjtxq6/AZg+vTpTZHuCdyOhvBFBjfOxBguvyDqiXqS787lp07rcV7HNrHFFU9WxL33jrX5X1FX89vqak9oq+f/ARdNWZaWQmQHAAAAAElFTkSuQmCC" alt="N-SPACE">
+            <div class="logo-divider"></div>
+            <div class="logo-title">
+                <span class="app-name">NestQ</span>
+                <span class="app-by">by N-SPACE</span>
+            </div>
+        </div>
+        <div class="ver-badge">V16.1</div>
+    </header>
+
+    <!-- 메인 레이아웃 (반응형 대응 및 스크롤 허용) -->
+    <div class="flex flex-col lg:flex-row flex-1 p-2 lg:p-4 gap-4 box-border max-w-full w-full">
+
+        <!-- 왼쪽: 제어 패널 -->
+        <div class="w-full lg:w-1/3 flex flex-col gap-4 flex-none min-w-0">
+            <!-- 네스팅 모드 및 규격 설정 -->
+            <div class="bg-white p-4 lg:p-5 rounded-xl shadow-sm border border-slate-200">
+                <h2 class="text-base font-bold text-slate-800 mb-4">📌 네스팅 옵션 설정</h2>
+                
+                <!-- 옵션 선택 라디오 버튼 -->
+                <div class="flex gap-2 lg:gap-4 mb-5 p-1 bg-slate-100 rounded-lg">
+                    <label class="flex-1 text-center cursor-pointer">
+                        <input type="radio" name="nest-mode" value="fixed" class="peer hidden" checked>
+                        <div class="py-2 text-xs lg:text-sm font-bold text-slate-500 rounded-md peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition">단일 규격 네스팅</div>
+                    </label>
+                    <label class="flex-1 text-center cursor-pointer">
+                        <input type="radio" name="nest-mode" value="suggest" class="peer hidden">
+                        <div class="py-2 text-xs lg:text-sm font-bold text-slate-500 rounded-md peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition">최적 길이 제안</div>
+                    </label>
+                </div>
+
+                <!-- 입력 폼 1: 단일 규격 -->
+                <div id="mode-fixed-inputs" class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold w-10 text-slate-600">원판</span>
+                        <input type="number" id="fixed-w" placeholder="폭" value="1232" class="flex-1 min-w-[60px] border border-slate-300 rounded px-2 py-1.5 text-sm">
+                        <input type="number" id="fixed-h" placeholder="길이" value="2400" class="flex-1 min-w-[60px] border border-slate-300 rounded px-2 py-1.5 text-sm">
+                        <input type="number" id="fixed-q" placeholder="수량" value="" class="flex-1 min-w-[50px] border border-slate-300 rounded px-2 py-1.5 text-sm" title="비워두면 무제한">
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">* 수량을 비워두면 필요한 만큼 무제한 생성합니다.</p>
+                </div>
+
+                <!-- 입력 폼 2: 길이 제안 -->
+                <div id="mode-suggest-inputs" class="flex flex-col gap-3 hidden">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold w-16 text-slate-600">코일 폭</span>
+                        <input type="number" id="suggest-w" placeholder="폭" value="1232" class="flex-1 border border-slate-300 rounded px-2 py-1.5 text-sm">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold w-16 text-slate-600">최대 길이</span>
+                        <input type="number" id="suggest-max-h" placeholder="허용되는 최대 길이" value="6000" class="flex-1 border border-slate-300 rounded px-2 py-1.5 text-sm">
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">* 코일 폭 내에서 로스가 최소화되는 절단 길이(최대 5종)를 제안합니다.</p>
+                </div>
+                
+                <div class="flex items-center gap-3 mt-4 pt-4 border-t border-slate-100">
+                    <div class="flex items-center gap-2 flex-1">
+                        <span class="text-xs lg:text-sm font-bold text-slate-500 whitespace-nowrap">원판 여백</span>
+                        <input type="number" id="sheet-margin" value="0" min="0" class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm outline-none">
+                    </div>
+                    <div class="flex items-center gap-2 flex-1">
+                        <span class="text-xs lg:text-sm font-bold text-slate-500 whitespace-nowrap">품목 간격</span>
+                        <input type="number" id="item-gap" value="0" min="0" class="w-full border border-slate-300 rounded px-2 py-1.5 text-sm outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 엑셀 데이터 불러오기 (스마트 리미트 및 실행버튼 상단 배치) -->
+            <div class="bg-white p-4 lg:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col flex-1 min-h-0">
+                <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+                    <h2 class="text-base font-bold text-slate-800">📂 패널 데이터</h2>
+                    <label class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-sm lg:text-base font-bold py-2 px-3 lg:px-4 rounded-lg cursor-pointer transition">
+                        엑셀 불러오기
+                        <input type="file" id="excel-upload" accept=".xlsx, .xls" class="hidden">
+                    </label>
+                </div>
+                
+                <!-- 🚀 1. 네스팅 실행 버튼을 엑셀 리스트 위로 끌어올림 -->
+                <button id="btn-run" class="mb-4 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-lg shadow-sm transition text-base lg:text-lg">
+                    🚀 네스팅 최적화 실행
+                </button>
+                
+                <!-- 📂 2. 엑셀 리스트 (적을 땐 축소, 최대 15줄 한도 스크롤, 저해상도 자동 반응) -->
+                <div class="overflow-auto border border-slate-200 rounded-lg max-h-[560px] min-h-[100px] flex-shrink">
+                    <table class="w-full text-xs lg:text-sm text-left">
+                        <thead class="text-xs text-slate-600 bg-slate-50 sticky top-0 shadow-sm">
+                            <tr><th class="px-3 lg:px-4 py-2 lg:py-3">품명</th><th class="px-3 lg:px-4 py-2 lg:py-3">폭</th><th class="px-3 lg:px-4 py-2 lg:py-3">길이</th><th class="px-3 lg:px-4 py-2 lg:py-3">수량</th></tr>
+                        </thead>
+                        <tbody id="panel-table-body">
+                            <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400">엑셀 파일을 불러오면 데이터가 표시됩니다.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽: 대시보드 및 도면 -->
+        <div class="w-full lg:w-2/3 flex flex-col gap-4 flex-1 min-h-[600px] lg:min-h-[500px] min-w-0">
+            <!-- 대시보드 -->
+            <div id="dashboard" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 min-h-[100px] flex items-center justify-center flex-none">
+                <div class="text-slate-500 text-sm lg:text-base text-center">👈 데이터를 불러오고 옵션 설정 후 실행해주세요.</div>
+            </div>
+
+            <!-- 도면 컨트롤 및 캔버스 (최소 높이 보장) -->
+            <div class="bg-white p-3 lg:p-4 rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col min-h-[400px] lg:min-h-[400px] relative">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 z-10 relative gap-3 md:gap-0">
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <select id="view-mode" class="border border-slate-300 rounded-md py-1 px-2 lg:py-1.5 lg:px-3 text-xs lg:text-sm focus:outline-none bg-white">
+                            <option value="all">전체 보기</option>
+                            <option value="single" selected>1장씩 보기</option>
+                            <option value="double">2장씩 보기</option>
+                        </select>
+                        <button id="btn-prev" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 lg:px-3 lg:py-1 rounded text-sm">◀</button>
+                        <span id="page-label" class="font-bold text-slate-500 text-xs lg:text-sm">페이지: - / -</span>
+                        <button id="btn-next" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 lg:px-3 lg:py-1 rounded text-sm">▶</button>
+                        <button id="btn-zoom" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1 lg:p-1.5 rounded ml-1" title="돋보기 토글">🔍</button>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto justify-end">
+                        <button id="btn-pdf" class="flex-1 md:flex-none justify-center bg-slate-600 hover:bg-slate-700 text-white font-bold py-1.5 px-3 lg:py-2 lg:px-4 rounded-lg shadow-sm text-xs lg:text-sm">🖨️ PDF</button>
+                        <button id="btn-dxf" class="flex-1 md:flex-none justify-center bg-blue-500 hover:bg-blue-600 text-white font-bold py-1.5 px-3 lg:py-2 lg:px-4 rounded-lg shadow-sm text-xs lg:text-sm">💾 DXF</button>
+                    </div>
+                </div>
+                
+                <div class="flex-1 w-full relative bg-slate-50 border border-slate-200 rounded-lg overflow-hidden min-h-[300px]" id="canvas-container">
+                    <canvas id="nestCanvas" class="block w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 글로벌 상태 변수 ---
+        let panelData = [];
+        let totalRequested = {};
+        let binsResult = []; 
+        let rectsResult = []; 
+        let currentViewIdx = 0; 
+        let zoomMode = false;
+
+        const canvas = document.getElementById('nestCanvas');
+        const ctx = canvas.getContext('2d');
+        let transform = { x: 0, y: 0, scale: 0.15 }; 
+        let isDragging = false, dragStart = { x: 0, y: 0 };
+
+        // --- 시트 미리보기 레이아웃 상수 (화면 고정 px 기준 - 해상도/시트크기 무관하게 항상 동일) ---
+        const SIDE_PAD_PX   = 20;  // 좌우 여백
+        const LABEL_GAP1_PX = 26;  // 시트 하단 → 1번째 라벨(Sheet n) baseline까지 거리
+        const LABEL_GAP2_PX = 46;  // 시트 하단 → 2번째 라벨(물량/로스율) baseline까지 거리
+        const LABEL_BLOCK_PX = 64; // 하단에 예약할 라벨 전체 높이(여백 포함, 위쪽 여백과 대칭시킬 기준)
+        const MIN_SCALE = 0.035;   // 저해상도에서 과도하게 작아지는 것을 막는 최소 스케일
+
+        // --- 모드 스위치 처리 ---
+        document.querySelectorAll('input[name="nest-mode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'fixed') {
+                    document.getElementById('mode-fixed-inputs').classList.remove('hidden');
+                    document.getElementById('mode-suggest-inputs').classList.add('hidden');
+                } else {
+                    document.getElementById('mode-fixed-inputs').classList.add('hidden');
+                    document.getElementById('mode-suggest-inputs').classList.remove('hidden');
+                }
+            });
+        });
+
+        function resizeCanvas() {
+            const container = document.getElementById('canvas-container');
+            if(container) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                centerCanvas();
+                drawCanvas();
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- 엑셀 불러오기 ---
+        document.getElementById('excel-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1}); 
+                
+                panelData = []; totalRequested = {};
+                for(let i=1; i<jsonData.length; i++) {
+                    let row = jsonData[i];
+                    if(!row[0] || !row[1] || !row[2] || !row[3]) continue;
+                    let name = String(row[0]), w = parseInt(row[1]), h = parseInt(row[2]), qty = parseInt(row[3]);
+                    if(w && h && qty) {
+                        panelData.push({name, w, h, qty});
+                        totalRequested[name] = (totalRequested[name] || 0) + qty;
+                    }
+                }
+                renderTable();
+                alert(`총 ${panelData.length}종목 데이터를 불러왔습니다.`);
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = ''; 
+        });
+
+        function renderTable() {
+            const tbody = document.getElementById('panel-table-body');
+            tbody.innerHTML = '';
+            panelData.forEach(p => {
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-100 hover:bg-slate-50">
+                        <td class="px-3 lg:px-4 py-2 whitespace-nowrap">${p.name}</td>
+                        <td class="px-3 lg:px-4 py-2">${p.w}</td>
+                        <td class="px-3 lg:px-4 py-2">${p.h}</td>
+                        <td class="px-3 lg:px-4 py-2 font-bold text-slate-700">${p.qty}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- MaxRects Packer 엔진 ---
+        class MaxRectsPacker {
+            constructor(w, h) {
+                this.freeRects = [{x: 0, y: 0, w: w, h: h}];
+            }
+            pack(w, h) {
+                let bestNode = null, bestShortSideFit = Infinity, bestFreeRectIdx = -1;
+                for (let i = 0; i < this.freeRects.length; i++) {
+                    let fr = this.freeRects[i];
+                    if (fr.w >= w && fr.h >= h) {
+                        let shortSide = Math.min(fr.w - w, fr.h - h);
+                        if (shortSide < bestShortSideFit) {
+                            bestNode = {x: fr.x, y: fr.y, w: w, h: h, rotated: false};
+                            bestShortSideFit = shortSide; 
+                            bestFreeRectIdx = i;
+                        }
+                    }
+                }
+                if (bestFreeRectIdx !== -1) {
+                    let node = bestNode;
+                    let num = this.freeRects.length;
+                    for (let i = 0; i < num; ++i) {
+                        if (this.splitFreeNode(this.freeRects[i], node)) { this.freeRects.splice(i, 1); i--; num--; }
+                    }
+                    this.pruneFreeRects();
+                    return node;
+                }
+                return null;
+            }
+            splitFreeNode(fr, used) {
+                if (used.x >= fr.x + fr.w || used.x + used.w <= fr.x || used.y >= fr.y + fr.h || used.y + used.h <= fr.y) return false;
+                if (used.x < fr.x + fr.w && used.x + used.w > fr.x) {
+                    if (used.y > fr.y && used.y < fr.y + fr.h) this.freeRects.push({x: fr.x, y: fr.y, w: fr.w, h: used.y - fr.y});
+                    if (used.y + used.h < fr.y + fr.h) this.freeRects.push({x: fr.x, y: used.y + used.h, w: fr.w, h: fr.y + fr.h - (used.y + used.h)});
+                }
+                if (used.y < fr.y + fr.h && used.y + used.h > fr.y) {
+                    if (used.x > fr.x && used.x < fr.x + fr.w) this.freeRects.push({x: fr.x, y: fr.y, w: used.x - fr.x, h: fr.h});
+                    if (used.x + used.w < fr.x + fr.w) this.freeRects.push({x: used.x + used.w, y: fr.y, w: fr.x + fr.w - (used.x + used.w), h: fr.h});
+                }
+                return true;
+            }
+            pruneFreeRects() {
+                for(let i=0; i<this.freeRects.length; i++) {
+                    for(let j=i+1; j<this.freeRects.length; j++) {
+                        if (this.isContained(this.freeRects[i], this.freeRects[j])) { this.freeRects.splice(i, 1); i--; break; }
+                        if (this.isContained(this.freeRects[j], this.freeRects[i])) { this.freeRects.splice(j, 1); j--; }
+                    }
+                }
+            }
+            isContained(a, b) { return a.x >= b.x && a.y >= b.y && a.x+a.w <= b.x+b.w && a.y+a.h <= b.y+b.h; }
+        }
+
+        // --- 네스팅 엔진 실행 ---
+        document.getElementById('btn-run').addEventListener('click', function() {
+            if(panelData.length === 0) return alert("엑셀 데이터를 먼저 불러오세요.");
+
+            let mode = document.querySelector('input[name="nest-mode"]:checked').value;
+            let sheetMargin = parseFloat(document.getElementById('sheet-margin').value) || 0;
+            let itemGap = parseFloat(document.getElementById('item-gap').value) || 0;
+            
+            binsResult = []; rectsResult = [];
+            
+            let itemsToPack = [];
+            panelData.forEach(p => { 
+                for(let i=0; i<p.qty; i++) itemsToPack.push({name: p.name, w: p.w, h: p.h, packW: p.w + itemGap, packH: p.h + itemGap, area: p.w*p.h}); 
+            });
+            itemsToPack.sort((a, b) => b.area - a.area);
+
+            if (mode === 'fixed') {
+                let sW = parseInt(document.getElementById('fixed-w').value);
+                let sH = parseInt(document.getElementById('fixed-h').value);
+                let sQ = parseInt(document.getElementById('fixed-q').value) || 9999; 
+
+                if (!sW || !sH) return alert("원판의 폭과 길이를 정확히 입력하세요.");
+                if (sW - sheetMargin*2 <= 0 || sH - sheetMargin*2 <= 0) return alert("원판 여백이 너무 큽니다.");
+
+                for (let item of itemsToPack) {
+                    let packed = false;
+                    for (let b=0; b<binsResult.length; b++) {
+                        let node = binsResult[b].packer.pack(item.packW, item.packH);
+                        if (node) {
+                            rectsResult.push({ binIdx: b, x: node.x + sheetMargin, y: node.y + sheetMargin, w: item.w, h: item.h, name: item.name });
+                            packed = true; break;
+                        }
+                    }
+                    if (!packed && binsResult.length < sQ) {
+                        let packer = new MaxRectsPacker(sW - sheetMargin*2, sH - sheetMargin*2);
+                        binsResult.push({ idx: binsResult.length, w: sW, h: sH, packer: packer });
+                        let node = packer.pack(item.packW, item.packH);
+                        if (node) {
+                            rectsResult.push({ binIdx: binsResult.length - 1, x: node.x + sheetMargin, y: node.y + sheetMargin, w: item.w, h: item.h, name: item.name });
+                        }
+                    }
+                }
+            } 
+            else if (mode === 'suggest') {
+                let sW = parseInt(document.getElementById('suggest-w').value);
+                let maxH = parseInt(document.getElementById('suggest-max-h').value);
+                
+                if (!sW || !maxH) return alert("코일 폭과 최대 허용 길이를 입력하세요.");
+                if (sW - sheetMargin*2 <= 0) return alert("원판 여백이 너무 큽니다.");
+
+                for (let item of itemsToPack) {
+                    if (item.packH > maxH - sheetMargin*2) {
+                        alert(`품목 '${item.name}'의 길이가 허용 최대 길이(${maxH})를 초과하여 배치할 수 없습니다.`);
+                        continue;
+                    }
+                    let packed = false;
+                    for (let b=0; b<binsResult.length; b++) {
+                        let node = binsResult[b].packer.pack(item.packW, item.packH);
+                        if (node) {
+                            rectsResult.push({ binIdx: b, x: node.x + sheetMargin, y: node.y + sheetMargin, w: item.w, h: item.h, name: item.name });
+                            packed = true; break;
+                        }
+                    }
+                    if (!packed) {
+                        let packer = new MaxRectsPacker(sW - sheetMargin*2, maxH - sheetMargin*2);
+                        binsResult.push({ idx: binsResult.length, w: sW, h: maxH, packer: packer });
+                        let node = packer.pack(item.packW, item.packH);
+                        if (node) {
+                            rectsResult.push({ binIdx: binsResult.length - 1, x: node.x + sheetMargin, y: node.y + sheetMargin, w: item.w, h: item.h, name: item.name });
+                        }
+                    }
+                }
+
+                let rawLengths = binsResult.map(bin => {
+                    let maxY = 0;
+                    let binRects = rectsResult.filter(r => r.binIdx === bin.idx);
+                    for (let r of binRects) {
+                        if (r.y + r.h > maxY) maxY = r.y + r.h;
+                    }
+                    maxY += sheetMargin; 
+                    return Math.ceil(maxY / 50) * 50; 
+                });
+
+                let uniqueLengths = [...new Set(rawLengths)].sort((a,b) => a-b);
+                while(uniqueLengths.length > 5) {
+                    let minDiff = Infinity, mergeIdx = -1;
+                    for(let i=0; i<uniqueLengths.length - 1; i++) {
+                        let diff = uniqueLengths[i+1] - uniqueLengths[i];
+                        if(diff < minDiff) { minDiff = diff; mergeIdx = i; }
+                    }
+                    let smaller = uniqueLengths[mergeIdx];
+                    let larger = uniqueLengths[mergeIdx+1];
+                    for(let i=0; i<rawLengths.length; i++) {
+                        if(rawLengths[i] === smaller) rawLengths[i] = larger;
+                    }
+                    uniqueLengths = [...new Set(rawLengths)].sort((a,b) => a-b);
+                }
+
+                for (let i=0; i<binsResult.length; i++) {
+                    binsResult[i].h = rawLengths[i];
+                }
+            }
+
+            updateDashboard(mode);
+            currentViewIdx = 0;
+            setTimeout(() => resizeCanvas(), 50);
+        });
+
+        function updateDashboard(mode) {
+            let totalReqQty = Object.values(totalRequested).reduce((a,b) => a+b, 0);
+            let placedQty = rectsResult.length;
+            let unplacedQty = totalReqQty - placedQty;
+
+            let totalReqArea = panelData.reduce((sum, p) => sum + (p.w * p.h * p.qty), 0);
+            let totalReqAreaM2 = (totalReqArea / 1000000).toFixed(2);
+
+            let totalSheetArea = 0;
+            let binCounts = {};
+            binsResult.forEach(b => {
+                totalSheetArea += (b.w * b.h);
+                let key = `${b.w}x${b.h}`;
+                binCounts[key] = (binCounts[key] || 0) + 1;
+            });
+            let totalSheetAreaM2 = (totalSheetArea / 1000000).toFixed(2);
+            
+            let binDetails = Object.keys(binCounts).map(k => `<span class="inline-block bg-white px-2 py-1 rounded border border-slate-200">${k} (<b class="text-blue-600">${binCounts[k]}장</b>)</span>`).join(' ');
+            
+            let totalRectArea = rectsResult.reduce((sum, r) => sum + (r.w * r.h), 0);
+            let lossRate = totalSheetArea > 0 ? (((totalSheetArea - totalRectArea) / totalSheetArea) * 100).toFixed(1) : "0.0";
+
+            let modeTitle = mode === 'fixed' ? "단일 규격 네스팅 결과" : "<span class='text-emerald-600'>최적 커팅 길이 제안 결과</span>";
+
+            const dashHtml = `
+                <div class="flex flex-col xl:flex-row gap-4 w-full">
+                    <div class="flex-1 bg-slate-50 rounded-lg p-3 lg:p-4 border border-slate-200 shadow-sm">
+                        <div class="text-sm font-bold text-slate-800 mb-2 border-b pb-1">📦 품목 물량 (요청 기준)</div>
+                        <div class="text-xs lg:text-[13px] text-slate-600">
+                            총 요청: <b>${totalReqQty}</b>개 <span class="mx-2 text-slate-300">|</span> 
+                            물량: <b class="text-blue-600 text-sm">${totalReqAreaM2} ㎡</b>
+                        </div>
+                        <div class="text-[11px] lg:text-[12px] text-slate-500 mt-1">
+                            (배치: ${placedQty}개 / 미배치: <span class="text-red-500">${unplacedQty}개</span>)
+                        </div>
+                    </div>
+                    <div class="flex-[2] bg-slate-50 rounded-lg p-3 lg:p-4 border border-slate-200 shadow-sm">
+                        <div class="text-sm font-bold text-slate-800 mb-2 border-b pb-1 flex flex-wrap justify-between gap-2">
+                            <span>🗂️ ${modeTitle} (총 ${binsResult.length}장)</span>
+                            <div class="flex gap-2 lg:gap-4">
+                                <span class="text-emerald-600 font-bold">소요: ${totalSheetAreaM2} ㎡</span>
+                                <span class="text-amber-600 font-bold bg-amber-100 px-1 lg:px-2 rounded">로스율: ${lossRate}%</span>
+                            </div>
+                        </div>
+                        <div class="text-xs lg:text-[13px] text-slate-600 flex flex-wrap gap-2 items-center mt-2">
+                            ${binDetails}
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('dashboard').innerHTML = dashHtml;
+            document.getElementById('dashboard').classList.remove('justify-center');
+
+            let placedTrack = {};
+            rectsResult.forEach(r => {
+                placedTrack[r.name] = (placedTrack[r.name] || 0) + 1;
+                r.dispText = `${r.name}\n${r.w}x${r.h}\n(${placedTrack[r.name]}/${totalRequested[r.name]})`;
+            });
+
+            if(unplacedQty > 0) {
+                alert(`⚠️ 자재 부족!\n수량이 부족하거나 규격에 맞지 않아 총 ${unplacedQty}개의 패널이 배치되지 못했습니다.`);
+            }
+        }
+
+        // --- 캔버스 렌더링 ---
+        document.getElementById('view-mode').addEventListener('change', () => { currentViewIdx = 0; centerCanvas(); drawCanvas(); });
+
+        function centerCanvas() {
+            if(binsResult.length === 0) return;
+            const container = document.getElementById('canvas-container');
+            let viewMode = document.getElementById('view-mode').value;
+            let startIdx = currentViewIdx;
+            let count = viewMode === 'double' ? 2 : (viewMode === 'all' ? binsResult.length : 1);
+            let endIdx = Math.min(startIdx + count, binsResult.length);
+
+            // 1. 전체 원판 데이터 중 '최대 폭'과 '최대 높이'를 전역 기준으로 추출 (페이지 전환 시 배율 고정)
+            let globalMaxW = 0, globalMaxH = 0;
+            binsResult.forEach(bin => {
+                globalMaxW = Math.max(globalMaxW, bin.w);
+                globalMaxH = Math.max(globalMaxH, bin.h);
+            });
+
+            let refW = globalMaxW;
+            if(viewMode === 'all') {
+                refW = binsResult.reduce((sum, b) => sum + b.w, 0) + (binsResult.length - 1) * 500;
+            } else if(viewMode === 'double') {
+                refW = globalMaxW * 2 + 500;
+            }
+
+            let currentW = 0, currentH = 0;
+            for(let i = startIdx; i < endIdx; i++) {
+                currentW += binsResult[i].w;
+                if (i > startIdx) currentW += 500;
+                currentH = Math.max(currentH, binsResult[i].h);
+            }
+            if (currentW === 0) { currentW = binsResult[startIdx].w; currentH = binsResult[startIdx].h; }
+
+            // 2. 상·하·좌·우 '절대 안전 여백' 설정 (px 단위)
+            const SAFE_TOP = 40;     // 도면이 천장에 붙는 것을 막는 최소 상단 여백
+            const SAFE_BOTTOM = 85;  // 하단 라벨 텍스트(Sheet 이름, 로스율)가 쓰일 전용 보장 공간
+            const SAFE_SIDE = 30;    // 좌우 여백
+
+            let availW = container.clientWidth - (SAFE_SIDE * 2);
+            let availH = container.clientHeight - (SAFE_TOP + SAFE_BOTTOM);
+
+            // 3. 전역 최대 규격(globalMaxH)으로 스케일 계산
+            let scaleW = availW / refW;
+            let scaleH = availH / globalMaxH;
+            let finalScale = Math.min(scaleW, scaleH);
+
+            if (finalScale < MIN_SCALE) finalScale = Math.max(scaleW, MIN_SCALE);
+            transform.scale = finalScale;
+
+            // 4. 화면 정중앙 좌표 계산 (상단 40px 아래로 단단히 고정)
+            let drawW = currentW * finalScale;
+            let drawH = currentH * finalScale;
+
+            transform.x = (container.clientWidth - drawW) / 2;
+            transform.y = Math.max(SAFE_TOP, (container.clientHeight - drawH - SAFE_BOTTOM) / 2);
+        }
+
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if(binsResult.length === 0) return;
+
+            let viewMode = document.getElementById('view-mode').value;
+            let startIdx = 0, endIdx = binsResult.length;
+            let pLabel = document.getElementById('page-label');
+
+            if(viewMode === 'all') { pLabel.innerText = `전체 ${binsResult.length}장`; } 
+            else if(viewMode === 'single') { startIdx = currentViewIdx; endIdx = Math.min(startIdx + 1, binsResult.length); pLabel.innerText = `페이지: ${startIdx+1} / ${binsResult.length}`; } 
+            else if(viewMode === 'double') { startIdx = currentViewIdx; endIdx = Math.min(startIdx + 2, binsResult.length); pLabel.innerText = `페이지: ${startIdx+1}~${endIdx} / ${binsResult.length}`; }
+
+            ctx.save();
+            ctx.translate(transform.x, transform.y);
+            ctx.scale(transform.scale, transform.scale);
+
+            let xOffset = 0;
+            for(let i = startIdx; i < endIdx; i++) {
+                let bin = binsResult[i];
+                let binRects = rectsResult.filter(r => r.binIdx === i);
+                
+                let sheetAreaM2 = ((bin.w * bin.h) / 1000000).toFixed(2);
+                let usedRectArea = binRects.reduce((sum, r) => sum + (r.w * r.h), 0);
+                let lossRate = (((bin.w * bin.h) - usedRectArea) / (bin.w * bin.h) * 100).toFixed(1);
+
+                ctx.strokeStyle = '#30343a'; ctx.lineWidth = 2 / transform.scale; 
+                ctx.strokeRect(xOffset, 0, bin.w, bin.h);
+                
+                ctx.fillStyle = '#1c2b5c';
+                let sheetLabel1 = `Sheet ${i+1} (${bin.w}x${bin.h})`;
+                let sheetLabel2 = `물량: ${sheetAreaM2}㎡ / 로스율: ${lossRate}%`;
+
+                // 화면상 항상 동일한 글자 크기로 보이도록 스케일을 역보정(고정 px). 
+                // 시트 폭에 비례하던 기존 방식은 시트마다 글자 크기가 달라지고 여백 예약치와 어긋나 잘림이 발생했음.
+                ctx.textAlign = 'center';
+
+                ctx.font = `bold ${15 / transform.scale}px 'Malgun Gothic'`;
+                ctx.fillText(sheetLabel1, xOffset + bin.w/2, bin.h + LABEL_GAP1_PX / transform.scale);
+
+                ctx.font = `bold ${12.5 / transform.scale}px 'Malgun Gothic'`; 
+                ctx.fillText(sheetLabel2, xOffset + bin.w/2, bin.h + LABEL_GAP2_PX / transform.scale);
+
+                for(let r of binRects) {
+                    ctx.fillStyle = '#eaf2ff'; ctx.fillRect(xOffset + r.x, r.y, r.w, r.h);
+                    ctx.strokeStyle = '#4c8dff'; ctx.lineWidth = 1 / transform.scale; ctx.strokeRect(xOffset + r.x, r.y, r.w, r.h);
+
+                    ctx.beginPath();
+                    let cx = xOffset + r.x + r.w/2; let cy = r.y + r.h/2;
+                    let ah = r.h/4; 
+                    
+                    ctx.moveTo(cx, cy - ah); ctx.lineTo(cx, cy + ah);
+                    let arrSz = 12 / transform.scale;
+                    ctx.lineTo(cx - arrSz, cy + ah - arrSz); ctx.moveTo(cx, cy + ah); ctx.lineTo(cx + arrSz, cy + ah - arrSz);
+                    ctx.moveTo(cx, cy - ah); ctx.lineTo(cx - arrSz, cy - ah + arrSz); ctx.moveTo(cx, cy - ah); ctx.lineTo(cx + arrSz, cy - ah + arrSz);
+                    
+                    ctx.strokeStyle = '#2eaf7d'; ctx.lineWidth = 1.5 / transform.scale; ctx.stroke();
+
+                    ctx.fillStyle = '#1c2b5c';
+                    let lines = r.dispText.split('\n');
+                    let fontSize = calcFitFontSize(r.w, r.h, lines.length, transform.scale, lines);
+                    ctx.font = `${fontSize}px 'Malgun Gothic'`;
+                    ctx.textBaseline = 'middle';
+                    let lineH = fontSize * 1.25;
+                    let startY = r.y + (r.h/2) - (lineH * (lines.length-1) / 2);
+                    
+                    for(let l=0; l<lines.length; l++) ctx.fillText(lines[l], cx, startY + (l * lineH));
+                }
+                xOffset += bin.w + 500; 
+            }
+            ctx.restore();
+        }
+
+        function calcFitFontSize(w, h, lineCount, scale, lines) {
+            let base = (w < 200 || h < 200) ? 12/scale : 16/scale;
+            let blockH = base * 1.25 * lineCount;
+            if (blockH > h * 0.8) base *= (h * 0.8 / blockH);
+            let maxChars = Math.max(...lines.map(l => l.length));
+            let estW = maxChars * base * 0.6;
+            if (estW > w * 0.9) base *= (w * 0.9 / estW);
+            return base;
+        }
+
+        // --- 마우스 및 터치(모바일) 이벤트 ---
+        function startDrag(clientX, clientY) {
+            isDragging = true;
+            dragStart = { x: clientX - transform.x, y: clientY - transform.y };
+        }
+        function moveDrag(clientX, clientY) {
+            if(!isDragging) return;
+            transform.x = clientX - dragStart.x;
+            transform.y = clientY - dragStart.y;
+            drawCanvas();
+        }
+
+        canvas.addEventListener('mousedown', (e) => startDrag(e.offsetX, e.offsetY));
+        canvas.addEventListener('mousemove', (e) => moveDrag(e.offsetX, e.offsetY));
+        canvas.addEventListener('mouseup', () => isDragging = false); 
+        canvas.addEventListener('mouseleave', () => isDragging = false);
+        
+        canvas.addEventListener('touchstart', (e) => {
+            if(e.touches.length === 1) startDrag(e.touches[0].clientX, e.touches[0].clientY);
+        }, {passive: false});
+        canvas.addEventListener('touchmove', (e) => {
+            if(isDragging && e.touches.length === 1) {
+                e.preventDefault(); 
+                moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, {passive: false});
+        canvas.addEventListener('touchend', () => isDragging = false);
+        canvas.addEventListener('touchcancel', () => isDragging = false);
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if(zoomMode) {
+                const scaleAmount = 1 + ((e.deltaY > 0 ? -1 : 1) * 0.1);
+                transform.x = e.offsetX - (e.offsetX - transform.x) * scaleAmount;
+                transform.y = e.offsetY - (e.offsetY - transform.y) * scaleAmount;
+                transform.scale *= scaleAmount; drawCanvas();
+            } else { changePage(e.deltaY > 0 ? 1 : -1); }
+        });
+
+        function changePage(direction) {
+            let viewMode = document.getElementById('view-mode').value;
+            if(viewMode === 'all' || binsResult.length === 0) return;
+            let step = viewMode === 'single' ? 1 : 2;
+            if(direction > 0 && currentViewIdx + step < binsResult.length) currentViewIdx += step;
+            else if(direction < 0 && currentViewIdx - step >= 0) currentViewIdx -= step;
+            centerCanvas(); drawCanvas();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowRight' || e.key === 'ArrowDown') changePage(1);
+            else if(e.key === 'ArrowLeft' || e.key === 'ArrowUp') changePage(-1);
+        });
+        document.getElementById('btn-prev').addEventListener('click', () => changePage(-1));
+        document.getElementById('btn-next').addEventListener('click', () => changePage(1));
+        
+        document.getElementById('btn-zoom').addEventListener('click', function() {
+            zoomMode = !zoomMode;
+            this.className = zoomMode ? "bg-blue-500 hover:bg-blue-600 text-white p-1 lg:p-1.5 rounded ml-1 lg:ml-2" : "bg-slate-100 hover:bg-slate-200 text-slate-600 p-1 lg:p-1.5 rounded ml-1 lg:ml-2";
+        });
+
+        function toDxfUnicode(str) {
+            let res = '';
+            for (let i = 0; i < str.length; i++) {
+                let code = str.charCodeAt(i);
+                res += code > 127 ? '\\U+' + code.toString(16).toUpperCase().padStart(4, '0') : str[i];
+            } return res;
+        }
+
+        function drawDxfPolyline(layer, color, points) {
+            let res = `0\nPOLYLINE\n8\n${layer}\n62\n${color}\n66\n1\n70\n1\n`;
+            for(let pt of points) res += `0\nVERTEX\n8\n${layer}\n10\n${pt.x}\n20\n${pt.y}\n`;
+            res += `0\nSEQEND\n8\n${layer}\n`; return res;
+        }
+
+        // --- DXF 저장 ---
+        document.getElementById('btn-dxf').addEventListener('click', function() {
+            if(binsResult.length === 0) return alert("저장할 데이터가 없습니다.");
+            let dxf = "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1009\n0\nENDSEC\n0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n4\n";
+            dxf += "0\nLAYER\n2\nSHEET\n70\n0\n62\n1\n6\nCONTINUOUS\n"; 
+            dxf += "0\nLAYER\n2\nPANEL\n70\n0\n62\n5\n6\nCONTINUOUS\n"; 
+            dxf += "0\nLAYER\n2\nTEXT\n70\n0\n62\n7\n6\nCONTINUOUS\n";  
+            dxf += "0\nLAYER\n2\nGRAIN\n70\n0\n62\n3\n6\nCONTINUOUS\n";
+            dxf += "0\nENDTAB\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n";
+            
+            let xOffset = 0;
+            for(let i=0; i<binsResult.length; i++) {
+                let bin = binsResult[i], sx = xOffset, sy = 0, sw = bin.w, sh = bin.h;
+                let binRects = rectsResult.filter(r => r.binIdx === i);
+
+                let sheetAreaM2 = ((bin.w * bin.h) / 1000000).toFixed(2);
+                let usedRectArea = binRects.reduce((sum, r) => sum + (r.w * r.h), 0);
+                let lossRate = (((bin.w * bin.h) - usedRectArea) / (bin.w * bin.h) * 100).toFixed(1);
+
+                dxf += drawDxfPolyline('SHEET', 1, [{x: sx, y: sy}, {x: sx+sw, y: sy}, {x: sx+sw, y: sh}, {x: sx, y: sh}]);
+
+                // DXF 텍스트 라벨 비례값 적용 (Y좌표는 음수로 내려서 시트 하단에 배치)
+                let sheetLabel1 = `Sheet ${i+1} (${bin.w}x${bin.h})`;
+                let sheetLabel2 = `물량: ${sheetAreaM2}㎡ / 로스율: ${lossRate}%`;
+                
+                let shTh1 = bin.w * 0.035;
+                let shLx1 = sx + bin.w/2 - (toDxfUnicode(sheetLabel1).length * shTh1 * 0.6 / 2);
+                let shLy1 = -shTh1 * 1.5;
+                dxf += `0\nTEXT\n8\nTEXT\n10\n${shLx1}\n20\n${shLy1}\n40\n${shTh1}\n1\n${toDxfUnicode(sheetLabel1)}\n`;
+
+                let shTh2 = shTh1 * 0.8;
+                let shLx2 = sx + bin.w/2 - (toDxfUnicode(sheetLabel2).length * shTh2 * 0.6 / 2);
+                let shLy2 = -shTh1 * 3.0; 
+                dxf += `0\nTEXT\n8\nTEXT\n10\n${shLx2}\n20\n${shLy2}\n40\n${shTh2}\n1\n${toDxfUnicode(sheetLabel2)}\n`;
+
+                for(let r of binRects) {
+                    let px = xOffset + r.x, py = r.y, cx = px + r.w/2, cy = py + r.h/2;
+                    dxf += drawDxfPolyline('PANEL', 5, [{x: px, y: py}, {x: px+r.w, y: py}, {x: px+r.w, y: py+r.h}, {x: px, y: py+r.h}]);
+
+                    let ah = r.h/4, arrSz = 30;
+                    dxf += `0\nLINE\n8\nGRAIN\n10\n${cx}\n20\n${cy-ah}\n11\n${cx}\n21\n${cy+ah}\n`;
+                    dxf += `0\nLINE\n8\nGRAIN\n10\n${cx}\n20\n${cy+ah}\n11\n${cx-arrSz}\n21\n${cy+ah-arrSz}\n`;
+                    dxf += `0\nLINE\n8\nGRAIN\n10\n${cx}\n20\n${cy+ah}\n11\n${cx+arrSz}\n21\n${cy+ah-arrSz}\n`;
+                    dxf += `0\nLINE\n8\nGRAIN\n10\n${cx}\n20\n${cy-ah}\n11\n${cx-arrSz}\n21\n${cy-ah+arrSz}\n`;
+                    dxf += `0\nLINE\n8\nGRAIN\n10\n${cx}\n20\n${cy-ah}\n11\n${cx+arrSz}\n21\n${cy-ah+arrSz}\n`;
+
+                    let rawLines = r.dispText.split('\n'), lineCount = rawLines.length;
+                    let th = Math.min(r.w, r.h) * 0.15;
+                    if (th * 1.25 * lineCount > r.h * 0.8) th *= (r.h * 0.8 / (th * 1.25 * lineCount));
+                    let maxChars = Math.max(...rawLines.map(l => l.length));
+                    if (maxChars * th * 0.6 > r.w * 0.9) th *= (r.w * 0.9 / (maxChars * th * 0.6));
+
+                    let lineH = th * 1.25, firstLineY = py + r.h/2 + (lineH * lineCount/2) - (lineH/2); 
+                    for (let li = 0; li < lineCount; li++) {
+                        let lx = cx - (rawLines[li].length * th * 0.6 / 2);
+                        dxf += `0\nTEXT\n8\nTEXT\n10\n${lx}\n20\n${firstLineY - (li * lineH)}\n40\n${th}\n1\n${toDxfUnicode(rawLines[li])}\n`;
+                    }
+                }
+                xOffset += bin.w + 500;
+            }
+            dxf += "0\nENDSEC\n0\nEOF\n";
+            dxf = dxf.replace(/\n/g, '\r\n');
+            const blob = new Blob([dxf], {type: 'text/plain;charset=utf-8'}), a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = `Nesting_DXF_${new Date().toISOString().slice(0,10)}.dxf`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        });
+
+        // --- PDF 저장 ---
+        document.getElementById('btn-pdf').addEventListener('click', async function() {
+            if(binsResult.length === 0) return alert("저장할 데이터가 없습니다.");
+            const { jsPDF } = window.jspdf;
+            const btn = this, origHtml = btn.innerHTML;
+            btn.innerHTML = '⏳ 생성중..'; btn.disabled = true;
+
+            try {
+                await new Promise(r => setTimeout(r, 50));
+                let pdf = null;
+                for(let i = 0; i < binsResult.length; i++) {
+                    let bin = binsResult[i], binRects = rectsResult.filter(r => r.binIdx === i);
+                    
+                    let baseFont = bin.w * 0.035; 
+                    let bottomMargin = bin.w * 0.15; 
+                    const PADDING = bin.w * 0.1; 
+                    
+                    let scaleK = 2000 / Math.max(bin.w, bin.h);
+                    let tCanvas = document.createElement('canvas');
+                    tCanvas.width = (bin.w + PADDING * 2) * scaleK; 
+                    tCanvas.height = (bin.h + bottomMargin + PADDING * 2) * scaleK; 
+                    
+                    let tctx = tCanvas.getContext('2d');
+                    tctx.fillStyle = '#ffffff'; tctx.fillRect(0, 0, tCanvas.width, tCanvas.height);
+                    tctx.save(); 
+                    tctx.translate(PADDING * scaleK, PADDING * scaleK); 
+                    tctx.scale(scaleK, scaleK);
+
+                    tctx.strokeStyle = '#30343a'; tctx.lineWidth = 2 / scaleK; tctx.strokeRect(0, 0, bin.w, bin.h);
+                    
+                    let sheetAreaM2 = ((bin.w * bin.h) / 1000000).toFixed(2);
+                    let usedRectArea = binRects.reduce((sum, r) => sum + (r.w * r.h), 0);
+                    let lossRate = (((bin.w * bin.h) - usedRectArea) / (bin.w * bin.h) * 100).toFixed(1);
+                    
+                    let sheetLabel1 = `Sheet ${i+1} (${bin.w}x${bin.h})`;
+                    let sheetLabel2 = `물량: ${sheetAreaM2}㎡ / 로스율: ${lossRate}%`;
+
+                    tctx.fillStyle = '#1c2b5c'; 
+                    tctx.textAlign = 'center'; 
+                    
+                    tctx.font = `bold ${baseFont}px 'Malgun Gothic'`;
+                    tctx.fillText(sheetLabel1, bin.w/2, bin.h + baseFont * 1.5);
+                    
+                    tctx.font = `bold ${baseFont * 0.8}px 'Malgun Gothic'`;
+                    tctx.fillText(sheetLabel2, bin.w/2, bin.h + baseFont * 3.0);
+
+                    for(let r of binRects) {
+                        tctx.fillStyle = '#eaf2ff'; tctx.fillRect(r.x, r.y, r.w, r.h);
+                        tctx.strokeStyle = '#4c8dff'; tctx.lineWidth = 1.5 / scaleK; tctx.strokeRect(r.x, r.y, r.w, r.h);
+
+                        tctx.beginPath();
+                        let ah = r.h/4, arrSz = 12 / scaleK;
+                        let cx = r.x + r.w/2, cy = r.y + r.h/2;
+                        tctx.moveTo(cx, cy - ah); tctx.lineTo(cx, cy + ah);
+                        tctx.lineTo(cx - arrSz, cy + ah - arrSz); tctx.moveTo(cx, cy + ah); tctx.lineTo(cx + arrSz, cy + ah - arrSz);
+                        tctx.moveTo(cx, cy - ah); tctx.lineTo(cx - arrSz, cy - ah + arrSz); tctx.moveTo(cx, cy - ah); tctx.lineTo(cx + arrSz, cy - ah + arrSz);
+                        tctx.strokeStyle = '#2eaf7d'; tctx.lineWidth = 2 / scaleK; tctx.stroke();
+
+                        tctx.fillStyle = '#1c2b5c';
+                        let lines = r.dispText.split('\n');
+                        let fSz = calcFitFontSize(r.w, r.h, lines.length, scaleK, lines);
+                        tctx.font = `${fSz}px 'Malgun Gothic'`; tctx.textBaseline = 'middle';
+                        let lineH = fSz * 1.3, startY = r.y + (r.h/2) - (lineH * (lines.length-1) / 2);
+                        for(let l=0; l<lines.length; l++) tctx.fillText(lines[l], r.x + r.w/2, startY + (l * lineH));
+                    }
+                    tctx.restore();
+
+                    const imgData = tCanvas.toDataURL('image/jpeg', 0.92);
+                    const orient = tCanvas.width >= tCanvas.height ? 'l' : 'p';
+                    if(!pdf) pdf = new jsPDF({ orientation: orient, unit: 'px', format: [tCanvas.width, tCanvas.height] });
+                    else pdf.addPage([tCanvas.width, tCanvas.height], orient);
+                    pdf.addImage(imgData, 'JPEG', 0, 0, tCanvas.width, tCanvas.height);
+                }
+                
+                let defaultName = `Nesting_Result_${new Date().toISOString().slice(0,10)}`;
+                let fileName = prompt("PDF 파일명을 입력하세요 (확장자 제외)", defaultName);
+                if (fileName === null) { 
+                    btn.innerHTML = origHtml;
+                    btn.disabled = false;
+                    return;
+                }
+                if (!fileName.trim()) fileName = defaultName;
+
+                const pdfBlob = pdf.output('blob'); const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a'); a.href = url; a.download = fileName.trim() + '.pdf';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch(err) { alert('PDF 오류: ' + err.message); } finally { btn.innerHTML = origHtml; btn.disabled = false; }
+        });
+
+        initUI();
+    </script>
+</body>
+</html>
